@@ -19,17 +19,17 @@ extension Button {
         }
     }
     
-    public init<S: EventExecutable>(_ expedition: S, @ViewBuilder label: () -> Label) {
+    public init<S: EventExecutable>(_ reducer: S, @ViewBuilder label: () -> Label) {
         self.init {
-            expedition.send()
+            reducer.send()
         } label: {
             label()
         }
     }
     
-    public init<S: EventExecutable, I: GranitePayload>(_ expedition: S, value : I, @ViewBuilder label: () -> Label) {
+    public init<S: EventExecutable, I: GranitePayload>(_ reducer: S, value : I, @ViewBuilder label: () -> Label) {
         self.init {
-            expedition.send(value)
+            reducer.send(value)
         } label: {
             label()
         }

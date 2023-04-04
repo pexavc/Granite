@@ -11,15 +11,15 @@ import SwiftUI
 
 //TODO: same for Button classes and other QoL accessors 
 extension View {
-    public func onTapGesture<S: AnyGraniteReducer>(_ expedition: S) -> some View {
+    public func onTapGesture<S: AnyGraniteReducer>(_ reducer: S) -> some View {
         return self.onTapGesture {
-            expedition.send()
+            reducer.send()
         }
     }
     
-    public func onTapGesture<S: EventExecutable>(_ expedition: S) -> some View {
+    public func onTapGesture<S: EventExecutable>(_ reducer: S) -> some View {
         return self.onTapGesture {
-            expedition.send()
+            reducer.send()
         }
     }
 }

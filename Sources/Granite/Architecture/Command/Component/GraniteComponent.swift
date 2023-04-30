@@ -42,7 +42,7 @@ public protocol AnyGraniteComponent {
     
 }
 
-public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View {
+public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View, Findable {
     associatedtype GenericGraniteCenter: GraniteCenter
     associatedtype ComponentView: View
     

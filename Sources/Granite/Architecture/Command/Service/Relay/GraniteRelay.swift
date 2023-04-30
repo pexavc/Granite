@@ -38,6 +38,9 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     
     var lifecycle: GraniteLifecycle = .none
     
+    fileprivate var isSilenced: Bool = false
+    fileprivate var pendingUpdates: Bool = false
+    
     internal var reducers: [AnyReducerContainer] = []
     internal var cancellables = Set<AnyCancellable>()
     
@@ -90,7 +93,11 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         
         changeSignal += { [weak self] state in
             DispatchQueue.main.async {
-                self?.objectWillChange.send()
+                if self?.isSilenced == false {
+                    self?.objectWillChange.send()
+                } else {
+                    self?.pendingUpdates = true
+                }
             }
         }
         
@@ -98,6 +105,22 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         
         self.lifecycle = .attached
         
+    }
+    
+    public func awake() {
+        isSilenced = false
+        
+        if pendingUpdates {
+            pendingUpdates = false
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+            }
+        }
+    }
+    
+    public func silence() {
+        isSilenced = true
     }
     
     public func persistStateChanges() {

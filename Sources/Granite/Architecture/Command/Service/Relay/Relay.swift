@@ -12,6 +12,8 @@ import SwiftUI
 public protocol AnyRelay {
     var id: UUID { get }
     func detach()
+    func awake()
+    func silence()
 }
 
 extension Relay: AnyRelay {
@@ -45,6 +47,14 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     public init(isDiscoverable: Bool = true, label: String = "") {
         self.isDiscoverable = isDiscoverable
 //        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
+    }
+    
+    public func awake() {
+        relay.awake()
+    }
+    
+    public func silence() {
+        relay.silence()
     }
 }
 

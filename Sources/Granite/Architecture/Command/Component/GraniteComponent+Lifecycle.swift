@@ -38,9 +38,19 @@ extension GraniteComponent {
         return view
             .onAppear {
                 locate?.didAppear?()
+                
+                let relays = self.findRelays()
+                for relay in relays {
+                    relay.awake()
+                }
             }
             .onDisappear {
                 locate?.didDisappear?()
+                
+                let relays = self.findRelays()
+                for relay in relays {
+                    relay.silence()
+                }
             }
     }
 }

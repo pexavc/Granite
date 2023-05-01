@@ -180,9 +180,11 @@ public struct GraniteTabView: View {
     @State var currentTab: Int = 0
     
     public init(_ style: GraniteTabStyle = .init(),
+                currentTab: Int = 0,
                 @GraniteTabBuilder tabs : @escaping () -> [GraniteTab]) {
         let tabList = tabs()
         self.style = style
+        self.currentTab = currentTab
         self.tabs = tabList
     }
     

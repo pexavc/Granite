@@ -16,6 +16,19 @@ extension View {
         return self.modifier(modifier)
     }
     
+    public func routeIf<C: View>(_ condition: Bool,
+                                 @ViewBuilder component : @escaping (() -> C)) -> some View {
+        Group {
+            if condition {
+                let modifier = NavigationRouteViewModifier<C>(component: component)
+                
+                self.modifier(modifier)
+            } else {
+                self
+            }
+        }
+    }
+    
     public func route<C: View>(@ViewBuilder component : @escaping (() -> C)) -> some View {
         let modifier = NavigationRouteViewModifier<C>(component: component)
         

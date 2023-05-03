@@ -25,6 +25,10 @@ extension GraniteService {
     public var isLoaded: Bool {
         locate?.command.isLoaded == true
     }
+    
+    public func preload() {
+        locate?.command.center.findStore()?.preload()
+    }
 }
 
 extension GraniteService {

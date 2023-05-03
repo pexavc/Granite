@@ -43,6 +43,13 @@ public struct StatePersistence<State : Codable> {
         }
     }
     
+    public func forceRestore() {
+        if let state : State = storage.restore() {
+            setState(state)
+            isLoaded(true)
+        }
+    }
+    
     public func purge() {
         storage.purge()
     }

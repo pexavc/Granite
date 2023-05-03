@@ -55,6 +55,14 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.isLoaded
     }
     
+    var didLoad: GraniteSignal {
+        container.didLoad
+    }
+    
+    func preload() {
+        container.persistence.forceRestore()
+    }
+    
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
         container = .init(storage: storage, autoSave: autoSave)
     }

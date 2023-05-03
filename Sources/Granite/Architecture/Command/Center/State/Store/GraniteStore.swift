@@ -19,6 +19,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     public let id = UUID()
     
     let willChange: GraniteSignal.Payload<State>
+    let didLoad: GraniteSignal
 
     @Published internal var state : State
     @Published var isLoaded : Bool
@@ -34,6 +35,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         self.autoSave = autoSave
         self.state = .init()
         self.willChange = .init()
+        self.didLoad = .init()
         self.isLoaded = autoSave == false
         
         $state
@@ -48,6 +50,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                 if status {
                     guard let state = self?.state else { return }
                     self?.willChange.send(state)
+                    self?.didLoad.send()
                 }
         }.store(in: &cancellables)
     }

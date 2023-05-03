@@ -50,6 +50,7 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
     }
     
     public func body(content: Content) -> some View {
+        #if os(iOS)
         NavigationLink(isActive: $isActive) {
             if isActive {
                 NavigationPassthroughComponent(isActive: $isActive,
@@ -66,6 +67,24 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
                     isActive = true
                 }
         }.isDetailLink(false)//TODO: should be customizable
+        #else
+        NavigationLink(isActive: $isActive) {
+            if isActive {
+                NavigationPassthroughComponent(isActive: $isActive,
+                                      screen: screen)
+            } else {
+                EmptyView()
+                    .onAppear {
+                        self.screen.clean()
+                    }
+            }
+        } label: {
+            content
+                .onTapGesture {
+                    isActive = true
+                }
+        }
+        #endif
     }
 }
 
@@ -84,6 +103,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     
     public func body(content: Content) -> some View {
         //TODO: onPush fires after onAppear. Should be before
+        #if os(iOS)
         NavigationLink(isActive: $isActive) {
             if isActive {
                 NavigationPassthroughView(isActive: $isActive,
@@ -100,5 +120,23 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
                     isActive = true
                 }
         }.isDetailLink(false)//TODO: should be customizable
+        #else
+        NavigationLink(isActive: $isActive) {
+            if isActive {
+                NavigationPassthroughView(isActive: $isActive,
+                                          screen: screen)
+            } else {
+                EmptyView()
+                    .onAppear {
+                        self.screen.clean()
+                    }
+            }
+        } label: {
+            content
+                .onTapGesture {
+                    isActive = true
+                }
+        }
+        #endif
     }
 }

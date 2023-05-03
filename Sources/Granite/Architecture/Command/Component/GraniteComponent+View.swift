@@ -8,7 +8,6 @@
 
 import Foundation
 import SwiftUI
-import UIKit
 
 extension GraniteComponent {
     public var body: some View {

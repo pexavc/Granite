@@ -15,6 +15,17 @@ extension Storage {
     }
 }
 
+/*
+ TODO:
+ 
+ When @Geometry is added to a component state itll prevent state updates to
+ update in the same lifecycle of the view of a notify response callback.
+ 
+ probably too many state changes before the latest state is updated within the
+ component
+ 
+ */
+
 protocol AnyNotify {
     //var id : UUID { get }
     var reducerType: AnyGraniteReducer.Type { get set }

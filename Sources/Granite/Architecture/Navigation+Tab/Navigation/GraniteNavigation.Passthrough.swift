@@ -76,6 +76,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     }
     
     public var body: some View {
+        #if os(iOS)
         ZStack {
             style.backgroundColor
                 .ignoresSafeArea()
@@ -103,6 +104,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: leadingView)
+        #else
+        ZStack {}
+        #endif
     }
 }
 
@@ -171,6 +175,7 @@ public struct NavigationPassthroughView<Component: View>: View {
     }
     
     public var body: some View {
+        #if os(iOS)
         ZStack {
             style.backgroundColor
                 .ignoresSafeArea()
@@ -198,5 +203,8 @@ public struct NavigationPassthroughView<Component: View>: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: leadingView)
+        #else
+        ZStack {}
+        #endif
     }
 }

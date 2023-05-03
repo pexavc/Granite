@@ -11,12 +11,14 @@ import SwiftUI
 
 extension View {
     public func graniteNavigation(backgroundColor: Color = .black) -> some View {
+        #if os(iOS)
         UINavigationBar.appearance().isUserInteractionEnabled = false
         UINavigationBar.appearance().backgroundColor = .clear
         UINavigationBar.appearance().barTintColor = .clear
         UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
         UINavigationBar.appearance().shadowImage = UIImage()
         UINavigationBar.appearance().tintColor = .clear
+        #endif
         
         return NavigationView {
             ZStack(alignment: .top) {
@@ -35,14 +37,18 @@ extension View {
     
     public func graniteNavigation(backgroundColor: Color = .black,
                                   @ViewBuilder leadingItem: @escaping () -> some View) -> some View {
+        
+        #if os(iOS)
         UINavigationBar.appearance().isUserInteractionEnabled = false
         UINavigationBar.appearance().backgroundColor = .clear
         UINavigationBar.appearance().barTintColor = .clear
         UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
         UINavigationBar.appearance().shadowImage = UIImage()
         UINavigationBar.appearance().tintColor = .clear
+        #endif
         
         return NavigationView {
+            #if os(iOS)
             ZStack(alignment: .top) {
                 backgroundColor
                     .ignoresSafeArea()
@@ -54,6 +60,7 @@ extension View {
             }
             .navigationBarTitle("", displayMode: .inline)
             .navigationBarHidden(true)
+            #endif
         }
         .environment(\.graniteNavigationStyle,
                       .init(leadingButtonKind: .customView,
@@ -106,6 +113,7 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                 .frame(maxWidth: .infinity,
                        maxHeight: .infinity)
             
+            #if os(iOS)
             content
                 .navigationBarBackButtonHidden(true)
                 .navigationBarItems(trailing: trailingView)
@@ -116,6 +124,7 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                         }
                     }
                 }
+            #endif
         }
     }
 }

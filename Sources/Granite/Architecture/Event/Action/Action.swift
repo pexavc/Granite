@@ -81,7 +81,11 @@ extension View {
     public func attach<S: EventExecutable, O>(_ expedition: S,
                                               at keyPath : KeyPath<Self, GraniteAction<O>.ActionWrapper>) -> some View {
         self[keyPath: keyPath].action = { value in
-            expedition.send(value as? GranitePayload ?? EmptyGranitePayload())
+            if let _ = value as? GranitePayload {
+                expedition.send(value as? GranitePayload ?? EmptyGranitePayload())
+            } else {
+                expedition.send()
+            }
         }
         
         return self

@@ -14,6 +14,7 @@ public protocol AnyRelay {
     func detach()
     func awake()
     func silence()
+    var isOnline: Bool { get }
 }
 
 extension Relay: AnyRelay {
@@ -35,6 +36,10 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
         mutating set {
             relay.update(newValue.center.state)
         }
+    }
+    
+    public var isOnline: Bool {
+        relay.service.locate?.command.isOnline == true
     }
     
     //12-21-12

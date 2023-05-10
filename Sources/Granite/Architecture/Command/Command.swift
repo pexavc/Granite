@@ -35,8 +35,9 @@ public struct Command<C: GraniteCenter> : DynamicProperty {
         command.didDisappear
     }
     
-    //TODO: used to be StoreObject
-    @ObservedObject public var command : GraniteCommand<C> = .init(.component)
+    //TODO: used to be StoreObject/ObservedObject,
+    //Observed object was not propagating changes in a nested view
+    @StateObject public var command : GraniteCommand<C> = .init(.component)
 
     public init() {}
 }

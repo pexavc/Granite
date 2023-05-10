@@ -49,6 +49,14 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     internal var cancellables = Set<AnyCancellable>()
     public let id: UUID
     
+    public var isOnline: Bool {
+        if case .service(.online) = kind {
+            return true 
+        } else {
+            return false
+        }
+    }
+    
     public var isLoaded: Bool {
         center.findStore()?.isLoaded == true
     }

@@ -52,6 +52,22 @@ extension GraniteAction.ActionWrapper where T == Void {
 }
 
 extension View {
+    public func attach<I>(_ action : (@escaping (I) -> Void), at keyPath : KeyPath<Self, GraniteAction<I>.ActionWrapper>) -> Self {
+        self[keyPath: keyPath].action = { value in
+            action(value)
+        }
+        
+        return self
+    }
+    
+    public func attach(_ action : (@escaping () -> Void), at keyPath : KeyPath<Self, GraniteAction<Void>.ActionWrapper>) -> Self {
+        self[keyPath: keyPath].action = { value in
+            action()
+        }
+        
+        return self
+    }
+    
     public func attach(_ action : GraniteAction<Void>.ActionWrapper, at keyPath : KeyPath<Self, GraniteAction<Void>.ActionWrapper>) -> Self {
         self[keyPath: keyPath].action = { value in
             action.perform(value)

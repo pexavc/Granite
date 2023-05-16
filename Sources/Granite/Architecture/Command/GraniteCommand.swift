@@ -206,7 +206,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         self.onDisappear = onDisappearEvents.map { $0.signal }
         
         if case .component = kind {
-            print("{TEST} \(String(reflecting: Self.self)) \(self.reducers.count) \(self.id)")
+            print("[Granite] \(String(reflecting: Self.self)) \(self.reducers.count) \(self.id)")
         }
     }
     
@@ -232,7 +232,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
      call that is being made.
     */
     public func notify(_ reducerType: AnyGraniteReducer.Type, payload: AnyGranitePayload?) {
-        print("{TEST} \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
+        print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
         notifies["\(reducerType)"]?.send(payload)
     }
 }

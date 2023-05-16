@@ -85,7 +85,6 @@ extension GraniteStore {
                 self.persistence.save()
             }
         }
-        
     }
     
 }

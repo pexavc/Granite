@@ -67,7 +67,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container = .init(storage: storage, autoSave: autoSave)
     }
     
-    public init(persist fileName: String, autoSave: Bool = false) {
+    public init(persist fileName: String, autoSave: Bool = false, preload: Bool = false) {
         container = .init(storage: FilePersistence(key: fileName), autoSave: autoSave)
         
         /*if a Service is called multiple times its relevant
@@ -75,6 +75,10 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         last state
         */
         guard autoSave else { return }
-        container.persistence.restore()
+        if preload {
+            container.persistence.forceRestore()
+        } else {
+            container.persistence.restore()
+        }
     }
 }

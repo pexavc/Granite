@@ -12,11 +12,17 @@ import Foundation
  Allows for @Store'd GraniteStates to persist data. A lightweight
  CoreData alternative.
 */
-public class FilePersistence : AnyPersistence {
-
+final public class FilePersistence : AnyPersistence {
+    
+    public static var initialValue: FilePersistence {
+        .init(key: UUID().uuidString)
+    }
+    
     public let key : String
     
     fileprivate let url : URL
+    
+    public var isRestoring: Bool = false
     
     public required init(key: String) {
         self.key = key
@@ -35,8 +41,20 @@ public class FilePersistence : AnyPersistence {
     public func save<State>(state: State) where State : Codable {
         let encoder = PropertyListEncoder()
         
+        
         do {
             let data = try encoder.encode(state)
+            
+            //If the service is online wrong saves can occur
+            //TODO: tmp files that pickle into the full file later?
+            let oldData = try Data(contentsOf: url)
+            
+            guard data.count != oldData.count else {
+                return
+            }
+            
+            //print("[Granite] saving \(key)")
+            
             try data.write(to: url)
         }
         catch let error {
@@ -48,9 +66,12 @@ public class FilePersistence : AnyPersistence {
         let decoder = PropertyListDecoder()
         
         guard let data = try? Data(contentsOf: url) else {
+            print("[Granite] failed to restore: \(key)")
             return nil
         }
+        
         do {
+            //print("[Granite] restoring: \(key)")
             return try decoder.decode(State.self, from: data)
         }
         catch let error {

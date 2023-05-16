@@ -15,6 +15,8 @@ public protocol AnyPersistence : AnyObject {
     
     var key : String { get }
     
+    var isRestoring : Bool { get set }
+    
     init(key : String)
     
     func save<State : Codable>(state : State)
@@ -40,6 +42,8 @@ extension AnyPersistence {
  Mostly used for default inits
 */
 public class EmptyPersistence : AnyPersistence {
+    public var isRestoring: Bool = false
+    
     public init() {}
     public required init(key: String) {}
 }

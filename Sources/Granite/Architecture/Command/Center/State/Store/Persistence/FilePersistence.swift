@@ -47,9 +47,9 @@ final public class FilePersistence : AnyPersistence {
             
             //If the service is online wrong saves can occur
             //TODO: tmp files that pickle into the full file later?
-            let oldData = try Data(contentsOf: url)
+            let oldData = try? Data(contentsOf: url)
             
-            guard data.count != oldData.count else {
+            guard data.count != oldData?.count else {
                 return
             }
             

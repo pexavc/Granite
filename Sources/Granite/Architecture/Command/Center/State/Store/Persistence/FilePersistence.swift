@@ -49,7 +49,7 @@ final public class FilePersistence : AnyPersistence {
             //TODO: tmp files that pickle into the full file later?
             let oldData = try? Data(contentsOf: url)
             
-            guard data.count != oldData?.count else {
+            guard data != oldData else {
                 return
             }
             

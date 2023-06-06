@@ -172,6 +172,7 @@ public struct NavigationPassthroughView<Component: View>: View {
                 Spacer()
             }
         }
+        .animation(nil)
     }
     
     public var body: some View {

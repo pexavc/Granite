@@ -15,7 +15,7 @@ import AVFoundation
 import Foundation
 
 extension Int {
-    fileprivate func randomBetween(_ secondNum: Int) -> Int{
+    public func randomBetween(_ secondNum: Int) -> Int{
         guard secondNum > 0 else { return 0 }
         
         return Int.random(in: self..<secondNum)

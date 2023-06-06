@@ -134,6 +134,10 @@ public struct GraniteTabViewModifier: ViewModifier {
     let tabs: [GraniteTab]
     @State var currentTab: Int = 0
     
+    #if os(iOS)
+    let generator = UIImpactFeedbackGenerator(style: .light)
+    #endif
+    
     init(@GraniteTabBuilder tabs : @escaping () -> [GraniteTab]) {
         let tabList = tabs()
         self.tabs = tabList
@@ -159,6 +163,12 @@ public struct GraniteTabViewModifier: ViewModifier {
                         Spacer()
                         Button(action: {
                             currentTab = indexOf(tab)
+                            
+                            #if os(iOS)
+                            generator.prepare()
+                            generator.impactOccurred()
+                            #endif
+                            
                         }) {
                             tab.content
                         }
@@ -178,6 +188,10 @@ public struct GraniteTabView: View {
     
     let tabs: [GraniteTab]
     @State var currentTab: Int = 0
+    
+    #if os(iOS)
+    let generator = UIImpactFeedbackGenerator(style: .light)
+    #endif
     
     public init(_ style: GraniteTabStyle = .init(),
                 currentTab: Int = 0,
@@ -209,6 +223,11 @@ public struct GraniteTabView: View {
                         Spacer()
                         Button(action: {
                             currentTab = indexOf(tab)
+                            
+                            #if os(iOS)
+                            generator.prepare()
+                            generator.impactOccurred()
+                            #endif
                         }) {
                             tab
                                 .content

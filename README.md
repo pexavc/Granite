@@ -276,7 +276,7 @@ Creating a struct that inherits from `GranitePayload` allows it to be linked to 
 
 Other reducers can be nested in reducers to fire.
 
-> CAREFUL about circular dependency. If a reducer in a service references another service, in which that OTHER service also references the callee. A recursive block will occur.
+> CAREFUL about circular dependency. If a reducer in a service references another service, in which the *callee* service also references the *caller*. A recursive block will occur. And it doesn't have to be in the samed called reducer. It can be in any within.
 
 ```swift
 import Granite

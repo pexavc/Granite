@@ -41,6 +41,8 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
      - A macOS GPT/ChatBot client and prompt creator/organizer. 
          - Network interfacing
          - High throughput between `GraniteRelays` for query/response interactions
+         - Payment processing and Payment state management. 
+             - Uses another personal and simple [StoreKit2 interface](https://github.com/pexavc/VaultKit) as well.
 
 # Table of Contents
 

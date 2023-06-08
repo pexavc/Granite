@@ -143,6 +143,10 @@ public struct NavigationPassthroughView<Component: View>: View {
     
     @Environment(\.graniteNavigationStyle) var style
     
+    #if os(iOS)
+    let generator = UIImpactFeedbackGenerator(style: .light)
+    #endif
+    
     fileprivate var screen: Screen<Component>
     @State var loaded: Bool = false
     
@@ -153,6 +157,10 @@ public struct NavigationPassthroughView<Component: View>: View {
     
     var leadingView : some View {
         Button(action: {
+            #if os(iOS)
+            generator.prepare()
+            generator.impactOccurred()
+            #endif
             self.$isActive.wrappedValue = false
         }) {
             HStack {

@@ -10,7 +10,7 @@ The Granite architecture provides:
   - Allows for a more structured approach in development. 
   - Building in a way, that makes context-switching less stressful when coming back to old code.
 - View Library. Granite comes with a comprehensive view library (GraniteUI) that can speed up development, offering thought out templates and other UX solutions.
-- Speeds up development to bootstrap ideas and make them production ready.
+- Rapid prototyping, when bootstrapping ideas. Simultaneously making them testable and production ready.
   - Neatia as seen below took 2 weeks from the ground-up, to build. Given [Third-Party Packages](https://github.com/pexavc/Nea#swift-packages--credits) were used in the process.
 
 # High Level Overview

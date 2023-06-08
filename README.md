@@ -55,6 +55,7 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
 
 # Table of Contents
 
+- [XCTemplates](#XCTemplates)
 - [Guide](#Guide)
 	- [GraniteComponent](#GraniteComponent) //Views
 	- [GraniteReducer](#GraniteReducer) //Business logic
@@ -64,6 +65,14 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
 	  - [Lifecycle Reducers](#Lifecycle-Reducers)
 	- [GraniteRelay](#GraniteRelay) //Services
 	  - ***WIP***
+
+# XCTemplates
+Located in [/Resources/Templates](https://github.com/pexavc/Granite/tree/main/Resources/Templates)
+
+Move XCTemplate files to this location: ~/Library/Developer/Xcode/Templates/Modules/...
+
+They will appear as modules within XCode for easy Component/Relay and Reducer creation when creating a new file.
+
 
 # Guide
 

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Identifier</key>
-	<string>arch.granite.component</string>
+	<string>arch.granite.reducer</string>
 	<key>AllowedTypes</key>
 	<array>
 		<string>public.swift-source</string>

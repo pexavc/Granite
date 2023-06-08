@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Identifier</key>
-	<string>arch.granite.component</string>
+	<string>arch.granite.relay</string>
 	<key>AllowedTypes</key>
 	<array>
 		<string>public.swift-source</string>
@@ -13,9 +13,9 @@
 		<string>com.apple.platform.iphoneos</string>
 	</array>
 	<key>DefaultCompletionName</key>
-	<string>Granite Service</string>
+	<string>Granite Relay</string>
 	<key>Description</key>
-	<string>Module of a Services for Granite Arch</string>
+	<string>Module of a Relay for Granite Arch</string>
 	<key>Kind</key>
 	<string>Xcode.IDEKit.TextSubstitutionFileTemplateKind</string>
 	<key>MainTemplateFile</key>

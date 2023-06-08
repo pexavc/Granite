@@ -7,7 +7,11 @@ A **SwiftUI Architecture** that merges Redux event handling and state management
 The Granite architecture provides:
 
 - Testability and Isolation. Routing, business, view logic, independant classes/protocols to be inherited. Each component is positioned to be decoupled and independant from eachother.
+  - Allows for a more structured approach in development. 
+  - Building in a way, that makes context-switching less stressful when coming back to old code.
 - View Library. Granite comes with a comprehensive view library (GraniteUI) that can speed up development, offering thought out templates and other UX solutions.
+- Speeds up development to bootstrap ideas and make them production ready.
+  - Neatia as seen below took 2 weeks from the ground-up, to build. Given [Third-Party Packages](https://github.com/pexavc/Nea#swift-packages--credits) were used in the process.
 
 # High Level Overview
 
@@ -43,6 +47,11 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
          - High throughput between `GraniteRelays` for query/response interactions
          - Payment processing and Payment state management. 
              - Uses another personal and simple [StoreKit2 interface](https://github.com/pexavc/VaultKit) as well.
+- Apps in Development that WILL use `Granite`
+  - [Marble](https://github.com/pexavc/LaMarque) This was initially built with an earlier version of the Granite design pattern.
+     - An Audio/Video music visualizer that uses Metal to render textures at 60FPS+. With multiple instance in 1 page running at 30FPS+.
+         - High throughput texture management, video encoding, and audio processing.
+         - And eventually, *Vision Pro* compatibility for Mixed Reality experiences.
 
 # Table of Contents
 
@@ -276,7 +285,7 @@ extension EnvironmentService {
         @Event var next: NextReducer.Reducer//Another reducer
         
         func reduce(state: inout Center.State) {
-        	next.send()
+            next.send()
         }
     }
     
@@ -310,7 +319,7 @@ extension EnvironmentService {
         
         func reduce(state: inout Center.State, payload: Payload)//New Parameter required, or this will never fire
         {
-        	next.send()
+            next.send()
         }
     }
 }
@@ -331,7 +340,7 @@ extension EnvironmentService {
         
         func reduce(state: inout Center.State)
         {
-        	service.preload()//Services load their states async. Force a preload if it's required now.
+            service.preload()//Services load their states async. Force a preload if it's required now.
         }
     }
 }

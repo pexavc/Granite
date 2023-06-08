@@ -365,7 +365,7 @@ extension AnotherComponent {
   - RelayName
   - RelayName+Center.swift //The "State" sits here
   - `/Reducers`
-     - RelayName 
+     - RelayName.ExampleReducer.swift 
 
 A [GraniteRelay](https://github.com/pexavc/Nea/blob/main/Services/Config/ConfigService.swift) is setup similarly to a `GraniteComponent`. Except there's no `var view` and `@Command`.
 
@@ -379,4 +379,4 @@ struct ConfigService: GraniteService {
 }
 ```
 
-[WIP]
+***WIP***

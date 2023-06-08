@@ -23,14 +23,15 @@ The Granite architecture provides:
 	- GraniteCommand 
 		- GraniteCenter 
 			- GraniteState 
-		- GraniteReducer (Reducers)
+		- GraniteReducer
 - GraniteRelay 
 	- GraniteService 
 		- GraniteCenter 
 			- GraniteState 
-		- GraniteReducer (Reducers)
+		- GraniteReducer
 
 This doc will use my [open-sourced macOS app](https://github.com/pexavc/Nea), 100% built with Granite/SwiftUI, as a working example.
+
 
 #### Disclaimer
 
@@ -69,7 +70,7 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
 # XCTemplates
 Located in [/Resources/Templates](https://github.com/pexavc/Granite/tree/main/Resources/Templates)
 
-Move XCTemplate files to this location: ~/Library/Developer/Xcode/Templates/Modules/...
+Move XCTemplate files to this location: `~/Library/Developer/Xcode/Templates/Modules`
 
 They will appear as modules within XCode for easy Component/Relay and Reducer creation when creating a new file.
 
@@ -121,25 +122,8 @@ import SwiftUI
 import SandKit
 
 extension Mount: View {
-    var queryHeight: CGFloat {
-        environment.sizeFor(.query).height + (environment.titleBarHeight / 2)
-    }
-    
-    var responseHeight: CGFloat {
-        environment.sizeFor(.response).height + (environment.titleBarHeight / 2)
-    }
-    
-    var backgroundView: some View {
-        { ... }
-    }
-    
-    var mainView: some View {
-        { ... }
-    }
-    
-    var toolbarViews: some View {
-        { ... }
-    }
+
+    { ... }
     
     public var view: some View { //Granite's "var body: some View {}"
         ZStack {
@@ -397,6 +381,32 @@ import Granite
 struct ConfigService: GraniteService {
     @Service(.online) var center: Center
 }
+```
+
+A `GraniteRelay`'s State can have multiple different params declared to change its behavior across the app. 
+
+1. `persist:` sets a filename, storing the State(Codable) into the applications document directory. Restoring it upon initialization.
+2. `autoSave:` allows the saving operation to occur whenever the State observes changes.
+3. `preload:` preloads the state, upon initialization, synchronously. Allowing the service's data to be immeediately available in the context declared.
+
+```swift
+import Granite
+import SwiftUI
+import LaunchAtLogin
+import SandKit
+
+extension ConfigService {
+    struct Center: GraniteCenter {
+        struct State: GraniteState {
+            
+        }
+        
+        @Store(persist: "save.0001",
+               autoSave: true,
+               preload: true) public var state: State
+    }
+
+
 ```
 
 ***WIP***

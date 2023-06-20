@@ -258,7 +258,7 @@ extension EnvironmentService {
 
 Creating a struct that inherits from `GranitePayload` allows it to be linked to a reducers `send` function. As we saw earlier in `center.ask.send()`. Now we can also do something like `env.boot.send(Boot.Meta(data: someData)))`
 
-Other reducers can be nested in reducers to fire.
+Other reducers can be nested in reducers to fire. But, for state changes to persist as expected they MUST have an appropriate forwarding type applied.
 
 > CAREFUL about circular dependency. If a reducer in a service references another service, in which the *callee* service also references the *caller*. A recursive block will occur. And it doesn't have to be in the samed called reducer. It can be in any within.
 
@@ -266,6 +266,14 @@ Other reducers can be nested in reducers to fire.
 import Granite
 
 extension EnvironmentService {
+	struct PreviousReducer: GraniteReducer {
+        typealias Center = EnvironmentService.Center
+        
+        func reduce(state: inout Center.State) {
+        	  //Do something
+        }
+    }
+    
     struct Boot: GraniteReducer {
         typealias Center = EnvironmentService.Center
         
@@ -275,10 +283,11 @@ extension EnvironmentService {
         
         @Payload var meta: Meta?//the `optional` is important
         
-        @Event var next: NextReducer.Reducer//Another reducer
+        @Event(.before) var next: NextReducer.Reducer//Another reducer, forwarded BEFORE the current reducer completes.
+        @Event(.after) var next: NextReducer.Reducer//Forwarded AFTER the current reducer completes.
         
         func reduce(state: inout Center.State) {
-            next.send()
+            //Do something with the BEFORE reducer's state changes
         }
     }
     
@@ -286,7 +295,7 @@ extension EnvironmentService {
         typealias Center = EnvironmentService.Center
         
         func reduce(state: inout Center.State) {
-        
+        	  //Do something with the state updated with the caller's changes
         }
     }
 }
@@ -312,7 +321,7 @@ extension EnvironmentService {
         
         func reduce(state: inout Center.State, payload: Payload)//New Parameter required, or this will never fire
         {
-            next.send()
+            //Do something.
         }
     }
 }

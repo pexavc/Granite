@@ -133,6 +133,9 @@ extension Event: CompileableEvent {
             containers += compileableEvent.compile(coordinator, properties: properties)
 
             //For event forwarding
+            guard event.forwarding != .none else {
+                continue
+            }
             if container.sideEffects[event.forwarding] == nil {
                 container.sideEffects[event.forwarding] = [event.signal]
             } else {

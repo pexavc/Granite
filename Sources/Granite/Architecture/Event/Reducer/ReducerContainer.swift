@@ -166,7 +166,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
 //        }
         
         for signal in (sideEffects[.after] ?? []){
-            signal.send(nil)
+            signal.send(reducer?.payload as? GranitePayload)
         }
     }
     

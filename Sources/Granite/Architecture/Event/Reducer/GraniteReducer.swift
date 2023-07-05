@@ -279,6 +279,7 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     }
     
     public func send() {
+        self.payload?.clear()
         signal.send(nil)
     }
     

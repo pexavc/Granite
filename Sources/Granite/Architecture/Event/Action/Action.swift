@@ -51,6 +51,41 @@ extension GraniteAction.ActionWrapper where T == Void {
     
 }
 
+public protocol GraniteActionable {
+    
+}
+
+extension GraniteActionable {
+    public func attach<I>(_ action : (@escaping (I) -> Void), at keyPath : KeyPath<Self, GraniteAction<I>.ActionWrapper>) -> Self {
+        self[keyPath: keyPath].action = { value in
+            action(value)
+        }
+        
+        return self
+    }
+    
+//    public func attach(_ action : (@escaping () -> Void), at keyPath : KeyPath<Self, GraniteAction<Void>.ActionWrapper>) -> Self {
+//        self[keyPath: keyPath].action = { value in
+//            action()
+//        }
+//        
+//        return self
+//    }
+    
+//    public func attach<S: EventExecutable, O>(_ expedition: S,
+//                                              at keyPath : KeyPath<Self, GraniteAction<O>.ActionWrapper>) -> Self {
+//        self[keyPath: keyPath].action = { value in
+//            if let _ = value as? GranitePayload {
+//                expedition.send(value as? GranitePayload ?? EmptyGranitePayload())
+//            } else {
+//                expedition.send()
+//            }
+//        }
+//        
+//        return self
+//    }
+}
+
 extension View {
     public func attach<I>(_ action : (@escaping (I) -> Void), at keyPath : KeyPath<Self, GraniteAction<I>.ActionWrapper>) -> Self {
         self[keyPath: keyPath].action = { value in

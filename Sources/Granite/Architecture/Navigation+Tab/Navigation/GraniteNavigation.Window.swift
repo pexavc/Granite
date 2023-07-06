@@ -26,7 +26,7 @@ public class GraniteNavigationWindow {
     public func addWindow<Content: View>(id: String? = nil,
                                          title: String,
                                          size: CGSize? = nil,
-                                         titlebarAware: Bool = true,
+                                         titlebarAware: Bool = false,
                                          isMain: Bool = false,
                                          @ViewBuilder content : (@escaping () -> Content)) {
         

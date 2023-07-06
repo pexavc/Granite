@@ -9,18 +9,20 @@ import Foundation
 import SwiftUI
 
 extension View {
-    public func route<C: GraniteComponent, O: GranitePayload>(payload: O? = nil,
+    public func route<C: GraniteComponent, O: GranitePayload>(title: String = "",
+                                                              payload: O? = nil,
                                                               @ViewBuilder component : @escaping (() -> C)) -> some View {
-        let modifier = NavigationRouteComponentModifier<C, O>(component: component, payload: payload)
+        let modifier = NavigationRouteComponentModifier<C, O>(title: title, component: component, payload: payload)
         
         return self.modifier(modifier)
     }
     
     public func routeIf<C: View>(_ condition: Bool,
+                                 title: String = "",
                                  @ViewBuilder component : @escaping (() -> C)) -> some View {
         Group {
             if condition {
-                let modifier = NavigationRouteViewModifier<C>(component: component)
+                let modifier = NavigationRouteViewModifier<C>(title: title, component: component)
                 
                 self.modifier(modifier)
             } else {
@@ -29,8 +31,9 @@ extension View {
         }
     }
     
-    public func route<C: View>(@ViewBuilder component : @escaping (() -> C)) -> some View {
-        let modifier = NavigationRouteViewModifier<C>(component: component)
+    public func route<C: View>(title: String = "",
+                               @ViewBuilder component : @escaping (() -> C)) -> some View {
+        let modifier = NavigationRouteViewModifier<C>(title: title, component: component)
         
         return self.modifier(modifier)
     }
@@ -43,7 +46,11 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughComponent<Component, Payload>.Screen<Component, Payload>
     
-    init(@ViewBuilder component: @escaping (() -> Component), payload: Payload? = nil) {
+    let title: String
+    
+    init(title: String = "",
+         @ViewBuilder component: @escaping (() -> Component), payload: Payload? = nil) {
+        self.title = title
         self._screen = .init(initialValue: .init(component, payload))
         //        routePayload = .init(payload)
         //        isActive = payload != nil
@@ -82,7 +89,7 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
             content
                 .onTapGesture {
                     isActive = true
-                    GraniteNavigationWindow.shared.addWindow(title: "") {
+                    GraniteNavigationWindow.shared.addWindow(title: self.title) {
                         NavigationPassthroughComponent(isActive: $isActive,
                                                        screen: screen)
                     }
@@ -99,7 +106,11 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughView<Component>.Screen<Component>
     
-    init(@ViewBuilder component: @escaping (() -> Component)) {
+    let title: String
+    
+    init(title: String = "",
+         @ViewBuilder component: @escaping (() -> Component)) {
+        self.title = title
         self._screen = .init(initialValue: .init(component))
         //        routePayload = .init(payload)
         //        isActive = payload != nil
@@ -128,7 +139,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
         content
             .onTapGesture {
                 isActive = true
-                GraniteNavigationWindow.shared.addWindow(title: "") {
+                GraniteNavigationWindow.shared.addWindow(title: self.title) {
                     NavigationPassthroughView(isActive: $isActive,
                                               screen: screen)
                 }

@@ -102,7 +102,7 @@ extension View {
     
     public func graniteNavigationDestination(title: LocalizedStringKey = .init(""),
                                              font: Font = .headline) -> some View {
-        return self.modifier(NavigationDestionationViewModifier(title: title, font: font, trailingItems: {}))
+        return self.modifier(NavigationDestionationViewModifier<EmptyView>(title: title, font: font, trailingItems: nil))
     }
     
     public func graniteNavigationDestination(title: LocalizedStringKey = .init(""),
@@ -119,18 +119,24 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
     
     var title: LocalizedStringKey
     var font: Font
-    let trailingItems: () -> TrailingContent
+    let trailingItems: (() -> TrailingContent)?
     
     init(title: LocalizedStringKey,
          font: Font,
-         @ViewBuilder trailingItems: @escaping () -> TrailingContent) {
+         trailingItems: (() -> TrailingContent)?) {
         self.title = title
         self.font = font
         self.trailingItems = trailingItems
     }
     
     var trailingView : some View {
-        trailingItems()
+        Group {
+            if let trailingItems {
+                trailingItems()
+            } else {
+                EmptyView()
+            }
+        }
     }
     
     var titleView: Text {
@@ -159,12 +165,14 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                 }
             #else
             VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    trailingView
+                if self.trailingItems != nil {
+                    HStack {
+                        Spacer()
+                        trailingView
+                    }
+                    .frame(height: 24)
+                    .padding(.horizontal, 16)
                 }
-                .frame(height: 24)
-                .padding(.horizontal, 16)
                 
                 content
                     .ignoresSafeArea()

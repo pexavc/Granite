@@ -82,6 +82,10 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
             content
                 .onTapGesture {
                     isActive = true
+                    GraniteNavigationWindow.shared.addWindow(title: "") {
+                        NavigationPassthroughComponent(isActive: $isActive,
+                                                       screen: screen)
+                    }
                 }
         }
         #endif
@@ -121,22 +125,14 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
                 }
         }.isDetailLink(false)//TODO: should be customizable
         #else
-        NavigationLink(isActive: $isActive) {
-            if isActive {
-                NavigationPassthroughView(isActive: $isActive,
-                                          screen: screen)
-            } else {
-                EmptyView()
-                    .onAppear {
-                        self.screen.clean()
-                    }
-            }
-        } label: {
-            content
-                .onTapGesture {
-                    isActive = true
+        content
+            .onTapGesture {
+                isActive = true
+                GraniteNavigationWindow.shared.addWindow(title: "") {
+                    NavigationPassthroughView(isActive: $isActive,
+                                              screen: screen)
                 }
-        }
+            }
         #endif
     }
 }

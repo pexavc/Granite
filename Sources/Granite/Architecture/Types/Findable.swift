@@ -55,6 +55,10 @@ extension Findable {
         return events
     }
     
+    var enableLifecycle: Bool {
+        return self.findEvents().first(where: { $0.lifecycle != .none }) != nil
+    }
+    
     func findCompileableEvents() -> [CompileableEvent] {
         let mirror = Mirror(reflecting: self)
         let children = mirror.children

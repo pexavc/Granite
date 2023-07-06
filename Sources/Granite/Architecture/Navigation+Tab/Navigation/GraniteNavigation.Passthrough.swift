@@ -73,6 +73,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                 Spacer()
             }
         }
+        .buttonStyle(PlainButtonStyle())
     }
     
     public var body: some View {
@@ -180,6 +181,7 @@ public struct NavigationPassthroughView<Component: View>: View {
                 Spacer()
             }
         }
+        .buttonStyle(PlainButtonStyle())
         .animation(nil)
     }
     
@@ -213,7 +215,31 @@ public struct NavigationPassthroughView<Component: View>: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: leadingView)
         #else
-        ZStack {}
+        ZStack {
+            style.backgroundColor
+                .ignoresSafeArea()
+                .frame(maxWidth: .infinity,
+                       maxHeight: .infinity)
+            
+            if loaded,
+               let screen = screen.screen {
+                screen
+            }
+            
+            if loaded == false {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+            }
+        }
+        .onAppear {
+            loaded = false
+            self.screen.build {
+                loaded = true
+            }
+        }
         #endif
     }
 }

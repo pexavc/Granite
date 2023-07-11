@@ -11,9 +11,6 @@ let package = Package(
             name: "Granite",
             targets: ["Granite"]),
         .library(
-            name: "GraniteML",
-            targets: ["GraniteML"]),
-        .library(
             name: "GraniteUI",
             targets: ["GraniteUI"]),
         
@@ -29,12 +26,6 @@ let package = Package(
         .testTarget(
             name: "GraniteTests",
             dependencies: ["Granite"]),
-        .target(
-            name: "GraniteML",
-            dependencies: []),
-        .testTarget(
-            name: "GraniteMLTests",
-            dependencies: ["GraniteML"]),
         .target(
             name: "GraniteUI",
             dependencies: []),

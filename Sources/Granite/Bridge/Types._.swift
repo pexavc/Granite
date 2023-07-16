@@ -14,7 +14,7 @@ public typealias GraniteBaseViewController = UIViewController
 public typealias GraniteViewType = UIView
 public typealias GraniteRepresentable = UIViewRepresentable
 public typealias GraniteRepresentableContext = UIViewRepresentableContext
-public typealias GraniteWindow = UIWindow
+//public typealias GraniteWindow = UIWindow
 public typealias GraniteResponder = UIResponder
 public typealias GraniteBaseApplicationDelegate = UIApplicationDelegate
 #elseif os(OSX)
@@ -24,7 +24,7 @@ public typealias GraniteBaseViewController = NSViewController
 public typealias GraniteViewType = NSView
 public typealias GraniteRepresentable = NSViewRepresentable
 public typealias GraniteRepresentableContext = NSViewRepresentableContext
-public typealias GraniteWindow = NSWindow
+//public typealias GraniteWindow = NSWindow
 public typealias GraniteResponder = NSObject
 public typealias GraniteBaseApplicationDelegate = NSApplicationDelegate
 #endif

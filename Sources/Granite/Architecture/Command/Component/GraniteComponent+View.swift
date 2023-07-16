@@ -13,10 +13,12 @@ extension GraniteComponent {
     public var body: some View {
         let geometry = locate?.command.center.state.findGeometry()
         
-        if geometry == nil {
-            return AnyView(lifecycle(view))
-        } else {
-            return AnyView(geometryView(geometry))
+        return ZStack {
+            if let geometry {
+                geometryView(geometry)
+            } else {
+                lifecycle(view)
+            }
         }
     }
 }

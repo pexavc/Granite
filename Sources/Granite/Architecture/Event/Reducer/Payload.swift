@@ -12,6 +12,7 @@ import SwiftUI
 
 public protocol AnyGranitePayload {
     func update(_ payload: AnyGranitePayload?)
+    func clear()
     var asGranitePayload: GranitePayload? { get }
 }
 
@@ -21,6 +22,7 @@ public protocol GranitePayload: AnyGranitePayload {
 
 extension GranitePayload {
     public func update(_ payload: AnyGranitePayload?) {}
+    public func clear() {}
     public var asGranitePayload: GranitePayload? { return nil }
 }
 
@@ -68,6 +70,10 @@ extension Payload: AnyGranitePayload {
     public func update(_ payload: AnyGranitePayload?) {
         guard payload != nil else { return }
         self.container.value = payload as? Payload
+    }
+    
+    public func clear() {
+        self.container.value = nil
     }
     
     public var asGranitePayload: GranitePayload? {

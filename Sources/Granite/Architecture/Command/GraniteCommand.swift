@@ -233,7 +233,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
      call that is being made.
     */
     public func notify(_ reducerType: AnyGraniteReducer.Type, payload: AnyGranitePayload?) {
-        print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
+//        print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
         notifies["\(reducerType)"]?.send(payload)
     }
 }

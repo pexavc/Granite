@@ -172,6 +172,7 @@ public struct GraniteTabViewModifier: ViewModifier {
                         }) {
                             tab.content
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     Spacer()
                 }
@@ -234,7 +235,7 @@ public struct GraniteTabView: View {
                             tab
                                 .content
                                 .environment(\.graniteTabSelected, currentTab == indexOf(tab))
-                        }
+                        }.buttonStyle(PlainButtonStyle())
                     }
                     Spacer()
                 }

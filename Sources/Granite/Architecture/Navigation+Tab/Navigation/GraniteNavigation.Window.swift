@@ -33,7 +33,6 @@ public class GraniteNavigationWindow {
         let windowId: String = id ?? "Window_\(count)"
         let windowSize: CGSize = size ?? GraniteNavigationWindow.defaultSize
         windows[windowId] = .init(id: windowId, isMain: isMain, size: windowSize)
-        print("[GraniteNavigationWindow] \(GraniteNavigationWindow.backgroundColor)")
         windows[windowId]?.backgroundColor = GraniteNavigationWindow.backgroundColor
         windows[windowId]?.build(title: title, center: false, show: true) { [weak self] in
             content()

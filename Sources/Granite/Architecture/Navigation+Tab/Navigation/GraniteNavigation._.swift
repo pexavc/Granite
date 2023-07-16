@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 extension View {
-    public func graniteNavigation(backgroundColor: Color = .black) -> some View {
+    public func graniteNavigation(backgroundColor: Color = .black, disable: Bool = false) -> some View {
         #if os(iOS)
         UINavigationBar.appearance().isUserInteractionEnabled = false
         UINavigationBar.appearance().backgroundColor = .clear
@@ -20,22 +20,37 @@ extension View {
         UINavigationBar.appearance().tintColor = .clear
         #endif
         
-        return NavigationView {
-            ZStack(alignment: .top) {
-                backgroundColor
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-                
+        return Group {
+            if disable {
                 self
-                    .background(backgroundColor)
+                    .environment(\.graniteNavigationStyle,
+                                  .init(backgroundColor: backgroundColor))
+            } else {
+                NavigationView {
+                    ZStack(alignment: .top) {
+                        backgroundColor
+                            .ignoresSafeArea()
+                            .frame(maxWidth: .infinity,
+                                   maxHeight: .infinity)
+                        
+                        #if os(iOS)
+                        self
+                            .background(backgroundColor)
+                            .navigationViewStyle(.stack)
+                        #else
+                        self
+                            .background(backgroundColor)
+                        #endif
+                    }
+                }
+                .environment(\.graniteNavigationStyle,
+                              .init(backgroundColor: backgroundColor))
             }
         }
-        .environment(\.graniteNavigationStyle,
-                      .init(backgroundColor: backgroundColor))
     }
     
     public func graniteNavigation(backgroundColor: Color = .black,
+                                  disable: Bool = false,
                                   @ViewBuilder leadingItem: @escaping () -> some View) -> some View {
         
         #if os(iOS)
@@ -47,30 +62,47 @@ extension View {
         UINavigationBar.appearance().tintColor = .clear
         #endif
         
-        return NavigationView {
-            #if os(iOS)
-            ZStack(alignment: .top) {
-                backgroundColor
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-                
+        return Group {
+            if disable {
                 self
-                    .background(backgroundColor)
+                    .environment(\.graniteNavigationStyle,
+                                  .init(backgroundColor: backgroundColor))
+            } else {
+                NavigationView {
+                    #if os(iOS)
+                    ZStack(alignment: .top) {
+                        backgroundColor
+                            .ignoresSafeArea()
+                            .frame(maxWidth: .infinity,
+                                   maxHeight: .infinity)
+                        self
+                            .background(backgroundColor)
+                            .navigationViewStyle(.stack)
+                    }
+                    .navigationBarTitle("", displayMode: .inline)
+                    .navigationBarHidden(true)
+                    #else
+                    ZStack(alignment: .top) {
+                        backgroundColor
+                            .ignoresSafeArea()
+                            .frame(maxWidth: .infinity,
+                                   maxHeight: .infinity)
+                        self
+                            .background(backgroundColor)
+                    }
+                    #endif
+                }
+                .environment(\.graniteNavigationStyle,
+                              .init(leadingButtonKind: .customView,
+                                    backgroundColor: backgroundColor,
+                                    leadingItem: leadingItem))
             }
-            .navigationBarTitle("", displayMode: .inline)
-            .navigationBarHidden(true)
-            #endif
         }
-        .environment(\.graniteNavigationStyle,
-                      .init(leadingButtonKind: .customView,
-                            backgroundColor: backgroundColor,
-                            leadingItem: leadingItem))
     }
     
     public func graniteNavigationDestination(title: LocalizedStringKey = .init(""),
                                              font: Font = .headline) -> some View {
-        return self.modifier(NavigationDestionationViewModifier(title: title, font: font, trailingItems: {}))
+        return self.modifier(NavigationDestionationViewModifier<EmptyView>(title: title, font: font, trailingItems: nil))
     }
     
     public func graniteNavigationDestination(title: LocalizedStringKey = .init(""),
@@ -87,18 +119,24 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
     
     var title: LocalizedStringKey
     var font: Font
-    let trailingItems: () -> TrailingContent
+    let trailingItems: (() -> TrailingContent)?
     
     init(title: LocalizedStringKey,
          font: Font,
-         @ViewBuilder trailingItems: @escaping () -> TrailingContent) {
+         trailingItems: (() -> TrailingContent)?) {
         self.title = title
         self.font = font
         self.trailingItems = trailingItems
     }
     
     var trailingView : some View {
-        trailingItems()
+        Group {
+            if let trailingItems {
+                trailingItems()
+            } else {
+                EmptyView()
+            }
+        }
     }
     
     var titleView: Text {
@@ -108,12 +146,13 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
     
     public func body(content: Content) -> some View {
         ZStack {
+            
+            #if os(iOS)
             style.backgroundColor
                 .ignoresSafeArea()
                 .frame(maxWidth: .infinity,
                        maxHeight: .infinity)
             
-            #if os(iOS)
             content
                 .navigationBarBackButtonHidden(true)
                 .navigationBarItems(trailing: trailingView)
@@ -124,6 +163,22 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                         }
                     }
                 }
+            #else
+            VStack(spacing: 0) {
+                if self.trailingItems != nil {
+                    HStack {
+                        Spacer()
+                        trailingView
+                    }
+                    .frame(height: 24)
+                    .padding(.horizontal, 16)
+                }
+                
+                content
+                    .ignoresSafeArea()
+                    .frame(maxWidth: .infinity,
+                           maxHeight: .infinity)
+            }
             #endif
         }
     }

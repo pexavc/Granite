@@ -67,9 +67,11 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     
     var onAppear: [GraniteSignal.Payload<GranitePayload?>]?
     var onDisappear: [GraniteSignal.Payload<GranitePayload?>]?
+    var onTask: [GraniteSignal.Payload<GranitePayload?>]?
     var events: [AnyEvent]?
     var didAppear: (() -> Void)?
     var didDisappear: (() -> Void)?
+    var runTasks: (() -> Void)?
     
     //@Event public var discoveryDiagnostic: DiagnoseTree<Center>.Reducer
     internal var reducers: [AnyReducerContainer] = []
@@ -150,7 +152,6 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         
         //Observed here, signal sent by Component+View
         didAppear = { [weak self] in
-            print("{TEST} \(self)")
             self?.thread.sync {
                 self?.onAppear?.forEach { event in
                 //TODO: There is still some sort of lag in transitions
@@ -174,6 +175,12 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
             
             self?.lifecycle = .disappeared
         }
+        
+        runTasks = { [weak self] in
+            self?.onTask?.forEach { signal in
+                signal.send(nil)
+            }
+        }
     }
     
     func compile() {
@@ -188,6 +195,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
 
         var onAppearEvents: [AnyEvent] = []
         var onDisappearEvents: [AnyEvent] = []
+        var onTaskEvents: [AnyEvent] = []
         var otherEvents: [AnyEvent] = []
 
         for event in events {
@@ -196,6 +204,8 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
                 onAppearEvents.append(event)
             case .onDisappear:
                 onDisappearEvents.append(event)
+            case .onTask:
+                onTaskEvents.append(event)
             default:
                 otherEvents.append(event)
             }
@@ -205,6 +215,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
 
         self.onAppear = onAppearEvents.map { $0.signal }
         self.onDisappear = onDisappearEvents.map { $0.signal }
+        self.onTask = onTaskEvents.map { $0.signal }
         
         if case .component = kind {
             print("[Granite] \(String(reflecting: Self.self)) \(self.reducers.count) \(self.id)")

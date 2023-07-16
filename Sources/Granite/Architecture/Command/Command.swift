@@ -34,6 +34,9 @@ public struct Command<C: GraniteCenter> : DynamicProperty {
     var didDisappear: (() -> Void)? {
         command.didDisappear
     }
+    var runTasks: (() -> Void)? {
+        command.runTasks
+    }
     
     //TODO: used to be StoreObject/ObservedObject,
     //Observed object was not propagating changes in a nested view

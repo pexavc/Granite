@@ -53,7 +53,6 @@ public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View, Finda
 extension GraniteComponent {
     //TODO: cache locate result
     public var locate: Command<Self.GenericGraniteCenter>? {
-        
         let mirror = Mirror(reflecting: self)
         let children = mirror.children
 

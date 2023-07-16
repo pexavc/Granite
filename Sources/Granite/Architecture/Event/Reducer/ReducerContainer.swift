@@ -117,6 +117,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         }
         
         reducer.syncSignal += { [weak self] value in
+            guard reducer.isOffline == false else { return }
             self?.coordinator?.setState(value)
         }
         
@@ -183,7 +184,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
                 //can thus, broadcast to peers
                 
                 self?.thread.async {
-                    if self?.isOnline == true {
+                    if self?.isOnline == true && self?.reducer?.isOffline == false {
                         self?.reducer?.syncSignal.send(newState)
                     }
                     
@@ -198,7 +199,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             
             thread.async { [weak self] in
                 //TODO: same as above
-                if self?.isOnline == true {
+                if self?.isOnline == true && self?.reducer?.isOffline == false {
                     self?.reducer?.syncSignal.send(newState)
                 }
                 

@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 //MARK: Environment & Style
-struct GraniteNavigationStyle {
-    enum LeadingButtonKind {
+public struct GraniteNavigationStyle {
+    public enum LeadingButtonKind {
         case close
         case back
         case customSystem(String)
@@ -18,14 +18,16 @@ struct GraniteNavigationStyle {
         case customView
     }
     
+    let title: String
     let leadingButtonImageName: String
     let leadingButtonKind: LeadingButtonKind
     let backgroundColor: Color
     let leadingItem: AnyView
     
-    init(leadingButtonKind: LeadingButtonKind = .back,
-         backgroundColor: Color = .black,
-         @ViewBuilder leadingItem: @escaping () -> some View) {
+    public init(title: String = "",
+                leadingButtonKind: LeadingButtonKind = .back,
+                backgroundColor: Color = .black,
+                @ViewBuilder leadingItem: @escaping () -> some View) {
         
         switch leadingButtonKind {
         case .close, .customView:
@@ -36,13 +38,14 @@ struct GraniteNavigationStyle {
                 .custom(let name):
             leadingButtonImageName = name
         }
+        self.title = title
         self.leadingButtonKind = leadingButtonKind
         self.backgroundColor = backgroundColor
         self.leadingItem = AnyView(leadingItem())
     }
     
-    init(leadingButtonKind: LeadingButtonKind = .back,
-         backgroundColor: Color = .black) {
+    public init(leadingButtonKind: LeadingButtonKind = .back,
+                backgroundColor: Color = .black) {
         
         switch leadingButtonKind {
         case .close, .customView:
@@ -53,6 +56,26 @@ struct GraniteNavigationStyle {
                 .custom(let name):
             leadingButtonImageName = name
         }
+        self.title = ""
+        self.leadingButtonKind = leadingButtonKind
+        self.backgroundColor = backgroundColor
+        self.leadingItem = AnyView(EmptyView())
+    }
+    
+    public init(title: String,
+                leadingButtonKind: LeadingButtonKind = .back,
+                backgroundColor: Color = .black) {
+        
+        switch leadingButtonKind {
+        case .close, .customView:
+            leadingButtonImageName = "xmark"
+        case .back:
+            leadingButtonImageName = "chevron.backward"
+        case .customSystem(let name),
+                .custom(let name):
+            leadingButtonImageName = name
+        }
+        self.title = title
         self.leadingButtonKind = leadingButtonKind
         self.backgroundColor = backgroundColor
         self.leadingItem = AnyView(EmptyView())

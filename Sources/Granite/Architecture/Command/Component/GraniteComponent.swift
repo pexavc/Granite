@@ -82,5 +82,10 @@ extension GraniteComponent {
     public var isLoaded: Bool {
         locate?.command.center.findStore()?.isLoaded == true
     }
+    
+    public func build(_ behavior: GraniteCommand<Self.GenericGraniteCenter>.BuildBehavior) -> Self {
+        locate?.command.build(behavior)
+        return self
+    }
 }
 

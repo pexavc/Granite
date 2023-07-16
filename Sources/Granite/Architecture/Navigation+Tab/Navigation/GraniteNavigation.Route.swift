@@ -7,6 +7,9 @@
 
 import Foundation
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 extension View {
     public func route<C: GraniteComponent, O: GranitePayload>(payload: O? = nil,
@@ -38,7 +41,19 @@ extension View {
 
 //MARK: Component
 public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payload: GranitePayload>: ViewModifier {
-    
+    #if os(iOS)
+    private func graniteHapticFeedbackDefaultSuccess() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.success)
+    }
+
+    private func graniteHapticFeedbackImpact(style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    #endif
     //    var routePayload: RoutePayload<Payload>
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughComponent<Component, Payload>.Screen<Component, Payload>
@@ -64,6 +79,7 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
         } label: {
             content
                 .onTapGesture {
+                    graniteHapticFeedbackImpact(style: .light)
                     isActive = true
                 }
         }.isDetailLink(false)//TODO: should be customizable
@@ -90,7 +106,19 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
 
 //MARK: View
 public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
-    
+    #if os(iOS)
+    private func graniteHapticFeedbackDefaultSuccess() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.success)
+    }
+
+    private func graniteHapticFeedbackImpact(style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    #endif
     //    var routePayload: RoutePayload<Payload>
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughView<Component>.Screen<Component>
@@ -117,6 +145,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
         } label: {
             content
                 .onTapGesture {
+                    graniteHapticFeedbackImpact(style: .light)
                     isActive = true
                 }
         }.isDetailLink(false)//TODO: should be customizable

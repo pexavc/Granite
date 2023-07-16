@@ -125,6 +125,10 @@ extension AnyGraniteReducer {
     public var notifiable: Bool {
         false
     }
+    
+    public var offline: Bool {
+        false
+    }
 }
 
 public protocol GraniteReducer: AnyGraniteReducer {
@@ -162,6 +166,7 @@ public protocol EventExecutable {
     var payload: AnyGranitePayload? { get set }
     var events: [AnyEvent] { get }
     var isNotifiable: Bool { get }
+    var isOffline: Bool { get }
     
     var thread: DispatchQueue? { get }
     
@@ -233,6 +238,9 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     }
     public var isNotifiable : Bool {
         expedition.notifiable
+    }
+    public var isOffline: Bool {
+        expedition.offline
     }
     
     required public init() {

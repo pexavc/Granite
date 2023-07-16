@@ -76,9 +76,9 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     internal var notifies: [String: AnyNotify] = [:]
     
     fileprivate var kind: GraniteCommandKind
-    fileprivate var buildBehavior: BuildBehavior
+    public var buildBehavior: BuildBehavior
     
-    init(_ kind: GraniteCommandKind) {
+    init(_ kind: GraniteCommandKind, initialCenter: Center? = nil) {
         let id: UUID = .init()
         self.id = id
         self.kind = kind
@@ -87,7 +87,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         Prospector.shared.currentNode?.addChild(id: self.id, label: String(reflecting: Self.self), type: .command)
 //        Prospector.shared.currentNode?.addProspector(self.prospector)
         Prospector.shared.push(id: self.id, .command)
-        center = Center()
+        center = initialCenter ?? Center()
         setup()
         Prospector.shared.pop(.command)
     }
@@ -150,6 +150,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         
         //Observed here, signal sent by Component+View
         didAppear = { [weak self] in
+            print("{TEST} \(self)")
             self?.thread.sync {
                 self?.onAppear?.forEach { event in
                 //TODO: There is still some sort of lag in transitions
@@ -234,6 +235,12 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     public func notify(_ reducerType: AnyGraniteReducer.Type, payload: AnyGranitePayload?) {
         print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
         notifies["\(reducerType)"]?.send(payload)
+    }
+}
+
+extension GraniteCommand {
+    func setServiceOffline() {
+        self.kind = .service(.offline)
     }
 }
 

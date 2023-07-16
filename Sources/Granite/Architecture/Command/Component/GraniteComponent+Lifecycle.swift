@@ -37,19 +37,18 @@ extension GraniteComponent {
     func lifecycle<Body : View>(_ view : Body) -> some View {
         return view
             .onAppear {
-                locate?.didAppear?()
-                
                 let relays = self.findRelays()
                 for relay in relays {
                     relay.awake()
                 }
+                
+                locate?.didAppear?()
             }
             .onDisappear {
                 locate?.didDisappear?()
                 
                 let relays = self.findRelays()
                 for relay in relays {
-                    guard relay.isOnline == false else { continue }
                     relay.silence()
                 }
             }

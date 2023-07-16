@@ -39,6 +39,7 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     var lifecycle: GraniteLifecycle = .none
     
     fileprivate var isSilenced: Bool = false
+    fileprivate var behavior: GraniteRelayBehavior = .normal
     fileprivate var pendingUpdates: Bool = false
     
     internal var reducers: [AnyReducerContainer] = []
@@ -65,6 +66,10 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         }
         
         removeObservers()
+    }
+    
+    public func update(behavior: GraniteRelayBehavior) {
+        self.behavior = behavior
     }
     
     public func update(_ state: Service.GenericGraniteCenter.GenericGraniteState) {

@@ -64,7 +64,7 @@ public struct GraniteTab : Identifiable, Equatable {
                                                             @ViewBuilder icon: @escaping (() -> Content)) {
         let componentBuild = component()
         let iconBuild = icon()
-        self.id = String(describing: iconBuild)
+        self.id = String(describing: componentBuild)
         self.action = action
         self.component = AnyView(componentBuild)
         self.content = AnyView(iconBuild)
@@ -207,7 +207,7 @@ public struct GraniteTabView: View {
     }
     
     public var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 0) {
             ZStack {
                 ForEach(tabs) { tab in
                     tab
@@ -216,6 +216,8 @@ public struct GraniteTabView: View {
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            Divider()
             
             VStack {
                 HStack {

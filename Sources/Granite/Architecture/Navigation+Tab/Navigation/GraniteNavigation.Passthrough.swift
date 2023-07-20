@@ -92,7 +92,12 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             if loaded == false {
                 VStack {
                     Spacer()
+                    #if os(iOS)
                     ProgressView()
+                    #else
+                    ProgressView()
+                        .scaleEffect(0.6)
+                    #endif
                     Spacer()
                 }
             }
@@ -201,7 +206,12 @@ public struct NavigationPassthroughView<Component: View>: View {
             if loaded == false {
                 VStack {
                     Spacer()
+                    #if os(iOS)
                     ProgressView()
+                    #else
+                    ProgressView()
+                        .scaleEffect(0.6)
+                    #endif
                     Spacer()
                 }
             }
@@ -243,3 +253,20 @@ public struct NavigationPassthroughView<Component: View>: View {
         #endif
     }
 }
+
+#if os(iOS)
+extension UINavigationController: UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return viewControllers.count > 1
+    }
+
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+}
+#endif

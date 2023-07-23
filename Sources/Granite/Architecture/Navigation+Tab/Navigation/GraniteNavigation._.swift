@@ -167,7 +167,6 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
             VStack(spacing: 0) {
                 if self.trailingItems != nil {
                     HStack {
-                        Spacer()
                         trailingView
                     }
                     .frame(height: 24)

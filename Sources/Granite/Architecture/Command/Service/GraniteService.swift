@@ -47,4 +47,15 @@ extension GraniteService {
     public var state: Self.GenericGraniteCenter.GenericGraniteState {
         locate?.command.center.state ?? .init()
     }
+    
+    public var _state: Binding<Self.GenericGraniteCenter.GenericGraniteState> {
+        return Binding<Self.GenericGraniteCenter.GenericGraniteState>(
+            get: {
+                self.state
+            },
+            set: {
+                self.locate?.command.center.state = $0
+            }
+        )
+    }
 }

@@ -149,6 +149,12 @@ extension GraniteReducer {
     public var thread: DispatchQueue? {
         nil
     }
+    
+    public var receiver : GraniteSignal.Payload<GranitePayload?> {
+        Storage.shared.value(at: "\(Self.self)+receiver") {
+            GraniteSignal.Payload<GranitePayload?>()
+        }
+    }
 }
 
 extension GraniteReducer {
@@ -284,6 +290,13 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         expedition.nudgeNotifyGraniteSignal += { [weak self] value in
             self?.send(value)
         }
+    }
+    
+    @discardableResult
+    public func receive(_ handler: @escaping (GranitePayload?) -> Void ) -> Self {
+        expedition.receiver.removeObservers()
+        expedition.receiver += handler
+        return self
     }
     
     public func send() {

@@ -47,6 +47,7 @@ public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View, Finda
     associatedtype ComponentView: View
     
     var center: GenericGraniteCenter { get set }
+    var receivers: Void { get }
     @ViewBuilder var view: Self.ComponentView { get }
 }
 
@@ -85,6 +86,10 @@ extension GraniteComponent {
     public func build(_ behavior: GraniteCommand<Self.GenericGraniteCenter>.BuildBehavior) -> Self {
         locate?.command.build(behavior)
         return self
+    }
+    
+    public var receivers: Void {
+        ({ })()
     }
 }
 

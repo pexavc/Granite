@@ -263,6 +263,7 @@ public struct GraniteTabView: View {
                         .component
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
+                        .environment(\.graniteTabSelected, currentTab == indexOf(tab))
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -276,6 +277,7 @@ public struct GraniteTabView: View {
                         .component
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
+                        .environment(\.graniteTabSelected, currentTab == indexOf(tab))
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             

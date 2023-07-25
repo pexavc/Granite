@@ -67,5 +67,4 @@ extension GraniteSignal.Payload {
         
         return observer.cancellable
     }
-    
 }

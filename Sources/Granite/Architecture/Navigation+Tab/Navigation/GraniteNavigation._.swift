@@ -134,6 +134,19 @@ extension View {
                                              @ViewBuilder trailingItems: @escaping () -> some View) -> some View {
         return self.modifier(NavigationDestionationViewModifier(title: title, font: font, trailingItems: trailingItems))
     }
+    
+    public func graniteNavigationDestinationIf(_ condition: Bool,
+                                               title: LocalizedStringKey = .init(""),
+                                             font: Font = .headline,
+                                             @ViewBuilder trailingItems: @escaping () -> some View) -> some View {
+        Group {
+            if condition {
+                self.modifier(NavigationDestionationViewModifier(title: title, font: font, trailingItems: trailingItems))
+            } else {
+                self.modifier(NavigationDestionationViewModifier<EmptyView>(title: title, font: font, trailingItems: nil))
+            }
+        }
+    }
 }
 
 //MARK: Destination

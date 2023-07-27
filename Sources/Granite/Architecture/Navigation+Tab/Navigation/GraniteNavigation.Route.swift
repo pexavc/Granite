@@ -79,44 +79,55 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
     
     public func body(content: Content) -> some View {
         #if os(iOS)
-        NavigationLink(isActive: $isActive) {
-            if isActive {
-                NavigationPassthroughComponent(isActive: $isActive,
-                                      screen: screen)
-            } else {
-                EmptyView()
-                    .onAppear {
-                        self.screen.clean()
-                    }
-            }
-        } label: {
+        
             content
+                .overlay(
+                    NavigationLink(isActive: $isActive) {
+                        if isActive {
+                            NavigationPassthroughComponent(isActive: $isActive,
+                                                  screen: screen)
+                        } else {
+                            EmptyView()
+                                .onAppear {
+                                    self.screen.clean()
+                                }
+                        }
+                    } label: {
+                        EmptyView()
+                    }
+                    .isDetailLink(false)//TODO: should be customizable
+                    .opacity(0.0000001)
+                )
                 .onTapGesture {
                     graniteHapticFeedbackImpact(style: .light)
                     isActive = true
                 }
-        }.isDetailLink(false)//TODO: should be customizable
         #else
-        NavigationLink(isActive: $isActive) {
-            if isActive {
-                NavigationPassthroughComponent(isActive: $isActive,
-                                      screen: screen)
-            } else {
-                EmptyView()
-                    .onAppear {
-                        self.screen.clean()
-                    }
-            }
-        } label: {
-            content
-                .onTapGesture {
-                    isActive = true
-                    GraniteNavigationWindow.shared.addWindow(title: self.title) {
+        content
+            .overlay(
+                NavigationLink(isActive: $isActive) {
+                    if isActive {
                         NavigationPassthroughComponent(isActive: $isActive,
-                                                       screen: screen)
+                                              screen: screen)
+                    } else {
+                        EmptyView()
+                            .onAppear {
+                                self.screen.clean()
+                            }
                     }
+                } label: {
+                    EmptyView()
                 }
-        }
+                .buttonStyle(PlainButtonStyle())
+                .opacity(0.0000001)
+            )
+            .onTapGesture {
+                isActive = true
+                GraniteNavigationWindow.shared.addWindow(title: self.title) {
+                    NavigationPassthroughComponent(isActive: $isActive,
+                                                   screen: screen)
+                }
+            }
         #endif
     }
 }
@@ -156,23 +167,30 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     public func body(content: Content) -> some View {
         //TODO: onPush fires after onAppear. Should be before
         #if os(iOS)
-        NavigationLink(isActive: $isActive) {
-            if isActive {
-                NavigationPassthroughView(isActive: $isActive,
-                                          screen: screen)
-            } else {
-                EmptyView()
-                    .onAppear {
-                        self.screen.clean()
+        content
+            .overlay(
+                NavigationLink(isActive: $isActive) {
+                    if isActive {
+                        NavigationPassthroughView(isActive: $isActive,
+                                                  screen: screen)
+                    } else {
+                        EmptyView()
+                            .onAppear {
+                                self.screen.clean()
+                            }
                     }
-            }
-        } label: {
-            content
-                .onTapGesture {
-                    graniteHapticFeedbackImpact(style: .light)
-                    isActive = true
+                } label: {
+                    EmptyView()
                 }
-        }.isDetailLink(false)//TODO: should be customizable
+                .isDetailLink(false)//TODO: should be customizable
+                .buttonStyle(PlainButtonStyle())
+                .opacity(0.0000001)
+            )
+            .onTapGesture {
+                graniteHapticFeedbackImpact(style: .light)
+                isActive = true
+            }
+        
         #else
         content
             .onTapGesture {

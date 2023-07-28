@@ -210,22 +210,27 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
         }
         
         #else
-        content
-            .onTapGesture {
-                if useTarget {
-                    isTargetActive = true
+        if useTarget {
+            content
+                .onChange(of: isTargetActive) { value in
+                    guard isTargetActive else { return }
                     GraniteNavigationWindow.shared.addWindow(title: self.title, style: style) {
                         NavigationPassthroughView(isActive: $isTargetActive,
                                                   screen: screen)
                     }
-                } else {
+                    isTargetActive = false
+                }
+        } else {
+            
+            content
+                .onTapGesture {
                     isActive = true
                     GraniteNavigationWindow.shared.addWindow(title: self.title, style: style) {
                         NavigationPassthroughView(isActive: $isActive,
                                                   screen: screen)
                     }
                 }
-            }
+        }
         #endif
     }
 }

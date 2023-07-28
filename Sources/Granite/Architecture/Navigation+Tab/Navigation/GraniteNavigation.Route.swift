@@ -36,6 +36,16 @@ extension View {
         }
     }
     
+    public func routeTarget<C: View>(_ condition: Binding<Bool>,
+                                 title: String = "",
+                                 style: GraniteNavigationWindowStyle = .default,
+                                 @ViewBuilder component : @escaping (() -> C)) -> some View {
+        
+        let modifier = NavigationRouteViewModifier<C>(isTargetActive: condition, useTarget: true, title: title, style: style, component: component)
+        
+        return self.modifier(modifier)
+    }
+    
     public func route<C: View>(title: String = "",
                                style: GraniteNavigationWindowStyle = .default,
                                @ViewBuilder component : @escaping (() -> C)) -> some View {
@@ -79,55 +89,46 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
     
     public func body(content: Content) -> some View {
         #if os(iOS)
-        
-            content
-                .overlay(
-                    NavigationLink(isActive: $isActive) {
-                        if isActive {
-                            NavigationPassthroughComponent(isActive: $isActive,
-                                                  screen: screen)
-                        } else {
-                            EmptyView()
-                                .onAppear {
-                                    self.screen.clean()
-                                }
-                        }
-                    } label: {
-                        EmptyView()
+        NavigationLink(isActive: $isActive) {
+            if isActive {
+                NavigationPassthroughComponent(isActive: $isActive,
+                                      screen: screen)
+            } else {
+                EmptyView()
+                    .onAppear {
+                        self.screen.clean()
                     }
-                    .isDetailLink(false)//TODO: should be customizable
-                    .opacity(0.0000001)
-                )
+            }
+        } label: {
+            content
                 .onTapGesture {
                     graniteHapticFeedbackImpact(style: .light)
                     isActive = true
                 }
+        }
+        .isDetailLink(false)//TODO: should be customizable
         #else
-        content
-            .overlay(
-                NavigationLink(isActive: $isActive) {
-                    if isActive {
-                        NavigationPassthroughComponent(isActive: $isActive,
-                                              screen: screen)
-                    } else {
-                        EmptyView()
-                            .onAppear {
-                                self.screen.clean()
-                            }
+        
+        NavigationLink(isActive: $isActive) {
+            if isActive {
+                NavigationPassthroughComponent(isActive: $isActive,
+                                      screen: screen)
+            } else {
+                EmptyView()
+                    .onAppear {
+                        self.screen.clean()
                     }
-                } label: {
-                    EmptyView()
-                }
-                .buttonStyle(PlainButtonStyle())
-                .opacity(0.0000001)
-            )
-            .onTapGesture {
-                isActive = true
-                GraniteNavigationWindow.shared.addWindow(title: self.title) {
-                    NavigationPassthroughComponent(isActive: $isActive,
-                                                   screen: screen)
-                }
             }
+        } label: {
+            content
+                .onTapGesture {
+                    isActive = true
+                    GraniteNavigationWindow.shared.addWindow(title: self.title) {
+                        NavigationPassthroughComponent(isActive: $isActive,
+                                                       screen: screen)
+                    }
+                }
+        }
         #endif
     }
 }
@@ -148,15 +149,20 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     }
     #endif
     //    var routePayload: RoutePayload<Payload>
+    @Binding var isTargetActive: Bool
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughView<Component>.Screen<Component>
-    
+    var useTarget: Bool
     let title: String
     let style: GraniteNavigationWindowStyle
     
-    init(title: String = "",
+    init(isTargetActive: Binding<Bool> = .constant(false),
+         useTarget: Bool = false,
+         title: String = "",
          style: GraniteNavigationWindowStyle,
          @ViewBuilder component: @escaping (() -> Component)) {
+        self._isTargetActive = isTargetActive
+        self.useTarget = useTarget
         self.title = title
         self.style = style
         self._screen = .init(initialValue: .init(component))
@@ -167,37 +173,57 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     public func body(content: Content) -> some View {
         //TODO: onPush fires after onAppear. Should be before
         #if os(iOS)
-        content
-            .overlay(
-                NavigationLink(isActive: $isActive) {
-                    if isActive {
-                        NavigationPassthroughView(isActive: $isActive,
-                                                  screen: screen)
-                    } else {
-                        EmptyView()
-                            .onAppear {
-                                self.screen.clean()
-                            }
-                    }
-                } label: {
+        if useTarget {
+            NavigationLink(isActive: $isTargetActive) {
+                if isTargetActive {
+                    NavigationPassthroughView(isActive: $isTargetActive,
+                                              screen: screen)
+                } else {
                     EmptyView()
+                        .onAppear {
+                            self.screen.clean()
+                        }
                 }
-                .isDetailLink(false)//TODO: should be customizable
-                .buttonStyle(PlainButtonStyle())
-                .opacity(0.0000001)
-            )
-            .onTapGesture {
-                graniteHapticFeedbackImpact(style: .light)
-                isActive = true
+            } label: {
+                content
             }
+            .isDetailLink(false)//TODO: should be customizable
+        } else {
+            NavigationLink(isActive: $isActive) {
+                if isActive {
+                    NavigationPassthroughView(isActive: $isActive,
+                                              screen: screen)
+                } else {
+                    EmptyView()
+                        .onAppear {
+                            self.screen.clean()
+                        }
+                }
+            } label: {
+                content
+                    .onTapGesture {
+                        graniteHapticFeedbackImpact(style: .light)
+                        isActive = true
+                    }
+            }
+            .isDetailLink(false)//TODO: should be customizable
+        }
         
         #else
         content
             .onTapGesture {
-                isActive = true
-                GraniteNavigationWindow.shared.addWindow(title: self.title, style: style) {
-                    NavigationPassthroughView(isActive: $isActive,
-                                              screen: screen)
+                if useTarget {
+                    isTargetActive = true
+                    GraniteNavigationWindow.shared.addWindow(title: self.title, style: style) {
+                        NavigationPassthroughView(isActive: $isTargetActive,
+                                                  screen: screen)
+                    }
+                } else {
+                    isActive = true
+                    GraniteNavigationWindow.shared.addWindow(title: self.title, style: style) {
+                        NavigationPassthroughView(isActive: $isActive,
+                                                  screen: screen)
+                    }
                 }
             }
         #endif

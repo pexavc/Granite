@@ -43,7 +43,16 @@ extension View {
         
         let modifier = NavigationRouteViewModifier<C>(isTargetActive: condition, useTarget: true, title: title, style: style, component: component)
         
+        #if os(iOS)
+        return VStack(spacing: 0) {
+            GraniteRoute()
+                .modifier(modifier)
+            self
+        }
+        #else
         return self.modifier(modifier)
+        #endif
+        
     }
     
     public func route<C: View>(title: String = "",
@@ -232,5 +241,11 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
                 }
         }
         #endif
+    }
+}
+
+public struct GraniteRoute: View {
+    public var body: some View {
+        EmptyView()
     }
 }

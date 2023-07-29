@@ -12,7 +12,7 @@ import SwiftUI
 extension GraniteComponent {
     public var body: some View {
         let geometry = locate?.command.center.state.findGeometry()
-        receivers
+        listeners
         return ZStack {
             if let geometry {
                 geometryView(geometry)

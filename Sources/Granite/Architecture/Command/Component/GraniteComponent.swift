@@ -47,7 +47,7 @@ public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View, Finda
     associatedtype ComponentView: View
     
     var center: GenericGraniteCenter { get set }
-    var receivers: Void { get }
+    var listeners: Void { get }
     @ViewBuilder var view: Self.ComponentView { get }
 }
 
@@ -88,7 +88,7 @@ extension GraniteComponent {
         return self
     }
     
-    public var receivers: Void {
+    public var listeners: Void {
         ({ })()
     }
 }

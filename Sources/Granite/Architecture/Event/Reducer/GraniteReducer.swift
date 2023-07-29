@@ -151,7 +151,7 @@ extension GraniteReducer {
     }
     
     public var receiver : GraniteSignal.Payload<GranitePayload?> {
-        Storage.shared.value(at: "\(Self.self)+receiver") {
+        Storage.shared.value(at: "\(Self.self)_receiver") {
             GraniteSignal.Payload<GranitePayload?>()
         }
     }
@@ -249,12 +249,19 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         expedition.offline
     }
     
+    internal var cancellables: Set<AnyCancellable> = .init()
+    
     required public init() {
         //let expedition = Expedition()
         //self.expedition = expedition
         self.payload = expedition.findPayload()
         //self.events = expedition.findEvents()
         //self.isNotifiable = expedition.notifiable
+    }
+    
+    deinit {
+        cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
     }
     
     public func execute(_ state: AnyGraniteState?) -> AnyGraniteState {
@@ -294,8 +301,10 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     
     @discardableResult
     public func receive(_ handler: @escaping (GranitePayload?) -> Void ) -> Self {
+        cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
         expedition.receiver.removeObservers()
-        expedition.receiver += handler
+        cancellables.insert(expedition.receiver += handler)
         return self
     }
     

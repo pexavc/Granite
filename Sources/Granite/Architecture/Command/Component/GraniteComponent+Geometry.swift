@@ -16,17 +16,13 @@ import SwiftUI
 */
 extension GraniteComponent {
     func geometryView(_ geo: AnyGeometry?) -> some View {
-        view
-            .onDisappear {
-                locate?.didDisappear?()
-            }
+        lifecycle(view)
             .background(
                 GeometryReader { proxy in
                     Color
                         .clear
                         .onAppear {
                         geo?.update(proxy)
-                        locate?.didAppear?()
                     }
                 })
     }

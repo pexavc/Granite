@@ -36,14 +36,23 @@ extension Publisher {
 class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     var subscription: Subscription?
     
+    enum State {
+        case stopped
+        case paused
+        case normal
+    }
+    
     //TODO: atomic
-    var isPaused = false {
+    var state: State = .stopped {
         didSet {
-            if !isPaused {
+            if oldValue == .paused && state == .normal {
                 sendBuffer()
             }
         }
     }
+    
+    var isStopped = false
+    
     var buffer = [Input]()
     var receiveValue: (Input) -> Void
     var receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)?
@@ -73,11 +82,15 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     }
     
     func receive(_ input: Input) -> Subscribers.Demand {
-        if isPaused {
-            buffer.append(input)
-        } else {
+        switch state {
+        case .normal:
             receiveValue(input)
+        case .paused:
+            buffer.append(input)
+        default:
+            break
         }
+        
         return self.demand
     }
     
@@ -93,7 +106,12 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     }
     
     var demand: Subscribers.Demand {
-        isPaused ? .unlimited : .none
+        switch state {
+        case .paused, .stopped:
+            return .unlimited
+        default:
+            return .none
+        }
     }
     
     func cancel() {

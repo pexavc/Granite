@@ -89,14 +89,18 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                     guard let state = self?.state else { return }
                     self?.willChange.send(state)
                     self?.didLoad.send()
+                    self?.pausable?.state = .normal
                 }
         }.store(in: &cancellables)
         
         syncSignal += { [weak self] (state, id) in
             guard self?.id != id else { return }
-            self?.pausable?.isPaused = true
+            self?.pausable?.state = .stopped
             self?.state = state
-            self?.pausable?.isPaused = false
+            if let newState = self?.state {
+                self?.willChange.send(newState)
+            }
+            self?.pausable?.state = .normal
         }
     }
     
@@ -114,6 +118,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         }
         
         cancellables.removeAll()
+        
+        pausable?.cancel()
+        pausable = nil
         
         persistStateChangesCancellable?.cancel()
         persistStateChangesCancellable = nil

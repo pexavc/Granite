@@ -32,12 +32,12 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     public let id = UUID()
     
     public var idSync : UUID {
-        if let id = Storage.shared.value(at: Storage.StoreIdentifierKey(id: "\(State.self)"/*String(describing: self)*/, keyPath: \GraniteStore<State>.idSync)) as? UUID {
+        if let id = Storage.shared.value(at: Storage.StoreIdentifierKey(id: String(describing: self), keyPath: \GraniteStore<State>.idSync)) as? UUID {
             return id
         }
         else {
             let id = UUID()
-            Storage.shared.setValue(id, at: Storage.StoreIdentifierKey(id: "\(State.self)"/*String(describing: self)*/, keyPath: \GraniteStore<State>.idSync))
+            Storage.shared.setValue(id, at: Storage.StoreIdentifierKey(id: String(describing: self), keyPath: \GraniteStore<State>.idSync))
             return id
         }
     }
@@ -76,8 +76,13 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
             .pausableSink { [weak self] state in
                 self?.willChange.send(state)
                 
-                if self?.isSyncing == true {
-                    self?.syncSignal.send((state, self?.id ?? .init()))
+                let shouldSync = self?.isSyncing == true
+                let id = self?.id ?? .init()
+                guard let signal = self?.syncSignal else { return }
+                if shouldSync {
+                    Task.detached {
+                        signal.send((state, id))
+                    }
                 }
         }
         pausable?.store(in: &cancellables)
@@ -85,8 +90,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         $isLoaded
             .removeDuplicates()
             .sink { [weak self] status in
-                if status {
-                    guard let state = self?.state else { return }
+                if status, let state = self?.state {
                     self?.willChange.send(state)
                     self?.didLoad.send()
                     self?.pausable?.state = .normal
@@ -94,18 +98,30 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         }.store(in: &cancellables)
         
         syncSignal += { [weak self] (state, id) in
-            guard self?.id != id else { return }
+            guard self?.id != id else {
+                //TODO: debounce?
+                if self?.autoSave == true {
+                    self?.persistence.save()
+                }
+                    
+                return
+            }
+            
+            //pause to avoid sync loop
             self?.pausable?.state = .stopped
             self?.state = state
-            if let newState = self?.state {
-                self?.willChange.send(newState)
-            }
+            //update view
+            self?.willChange.send(state)
             self?.pausable?.state = .normal
         }
     }
     
     func sync(shutdown: Bool = false) {
         isSyncing = shutdown == false
+    }
+    
+    func preload() {
+        persistence.forceRestore()
     }
     
     deinit {
@@ -135,11 +151,6 @@ extension GraniteStore {
             return self.state
         } set: { value in
             self.state = value
-            
-            //TODO: debounce?
-            if self.autoSave {
-                self.persistence.save()
-            }
         }
     }
     

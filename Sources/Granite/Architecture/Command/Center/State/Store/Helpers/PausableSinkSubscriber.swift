@@ -108,9 +108,9 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     var demand: Subscribers.Demand {
         switch state {
         case .paused, .stopped:
-            return .unlimited
-        default:
             return .none
+        default:
+            return .unlimited
         }
     }
     

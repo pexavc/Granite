@@ -60,7 +60,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
     }
     
     func preload() {
-        container.persistence.forceRestore()
+        container.preload()
     }
     
     func sync(shutdown: Bool = false) {

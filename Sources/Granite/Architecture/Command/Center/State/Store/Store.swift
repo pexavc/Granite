@@ -67,6 +67,10 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.sync(shutdown: shutdown)
     }
     
+    var syncSignal: GraniteSignal.Payload<(State, UUID)> {
+        container.syncSignal
+    }
+    
     var isSyncing: Bool {
         container.isSyncing
     }

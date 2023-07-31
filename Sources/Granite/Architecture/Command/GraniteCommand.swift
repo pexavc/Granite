@@ -104,6 +104,10 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     }
     
     func setup() {
+        if case .service(.online) = kind {
+            center.findStore()?.sync()
+        }
+        
         bind()
         observe()
     }

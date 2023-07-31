@@ -90,10 +90,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         
         reducer.signal.bind("signal")
         reducer.attachSignal.bind("attachSignal")
-        
-        if isOnline {
-            reducer.syncSignal.bind("syncSignal", removeObservers: false)
-        }
     }
     
     func observe() {
@@ -114,11 +110,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         
         reducer.attachSignal += { [weak self] value in
             reducer.update(value)
-        }
-        
-        reducer.syncSignal += { [weak self] value in
-            guard reducer.isOffline == false else { return }
-            self?.coordinator?.setState(value)
         }
         
         if reducer.isNotifiable {
@@ -184,10 +175,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
                 //can thus, broadcast to peers
                 
                 self?.thread.async {
-                    if self?.isOnline == true && self?.reducer?.isOffline == false {
-                        self?.reducer?.syncSignal.send(newState)
-                    }
-                    
                     if let reducerType = self?.reducer?.reducerType {
                         self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                     }
@@ -199,10 +186,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             
             thread.async { [weak self] in
                 //TODO: same as above
-                if self?.isOnline == true && self?.reducer?.isOffline == false {
-                    self?.reducer?.syncSignal.send(newState)
-                }
-                
                 if let reducerType = self?.reducer?.reducerType {
                     self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                 }

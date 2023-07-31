@@ -63,6 +63,14 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.persistence.forceRestore()
     }
     
+    func sync(shutdown: Bool = false) {
+        container.sync(shutdown: shutdown)
+    }
+    
+    var isSyncing: Bool {
+        container.isSyncing
+    }
+    
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
         container = .init(storage: storage, autoSave: autoSave)
     }

@@ -98,12 +98,6 @@ extension AnyGraniteReducer {
         }
     }
     
-    public var syncGraniteSignal : GraniteSignal.Payload<AnyGraniteState> {
-        Storage.shared.value(at: Storage.EventSignalIdentifierKey(id: self.idSync, keyPath: \AnyGraniteReducer.syncGraniteSignal)) {
-            GraniteSignal.Payload<AnyGraniteState>()
-        }
-    }
-    
     public var nudgeNotifyGraniteSignal : GraniteSignal.Payload<GranitePayload> {
         Storage.shared.value(at: Storage.EventSignalIdentifierKey(id: self.id, keyPath: \AnyGraniteReducer.nudgeNotifyGraniteSignal)) {
             GraniteSignal.Payload<GranitePayload>()
@@ -130,10 +124,6 @@ extension AnyGraniteReducer {
     }
     
     public var notifiable: Bool {
-        false
-    }
-    
-    public var offline: Bool {
         false
     }
 }
@@ -176,11 +166,9 @@ public protocol EventExecutable {
     var signal : GraniteSignal.Payload<GranitePayload?> { get }
     var intermediateSignal : GraniteSignal.Payload<GranitePayload?> { get }
     var attachSignal : GraniteSignal.Payload<GranitePayload?> { get }
-    var syncSignal : GraniteSignal.Payload<AnyGraniteState> { get }
     var payload: AnyGranitePayload? { get set }
     var events: [AnyEvent] { get }
     var isNotifiable: Bool { get }
-    var isOffline: Bool { get }
     
     var thread: DispatchQueue? { get }
     
@@ -226,10 +214,6 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         }
     }
     
-    public var syncSignal : GraniteSignal.Payload<AnyGraniteState> {
-        expedition.syncGraniteSignal
-    }
-    
     public var thread: DispatchQueue? {
         expedition.thread
     }
@@ -252,9 +236,6 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     }
     public var isNotifiable : Bool {
         expedition.notifiable
-    }
-    public var isOffline: Bool {
-        expedition.offline
     }
     
     public enum ListenKind {

@@ -14,10 +14,12 @@ import SwiftUI
 
 public struct GraniteNavigationWindowStyle {
     var size: CGSize
+    var minSize: CGSize?
     var styleMask: NSWindow.StyleMask?
     
-    public init(size: CGSize, styleMask: NSWindow.StyleMask? = nil) {
+    public init(size: CGSize, minSize: CGSize? = nil, styleMask: NSWindow.StyleMask? = nil) {
         self.size = size
+        self.minSize = minSize
         self.styleMask = styleMask
     }
     
@@ -56,15 +58,21 @@ public class GraniteNavigationWindow {
         
         let windowId: String = id ?? "Window_\(count)"
         let windowSize: CGSize = style?.size ?? GraniteNavigationWindow.defaultSize
+        let minWindowSize: CGSize = style?.minSize ?? windowSize
         windows[windowId] = .init(id: windowId, isMain: isMain, size: windowSize)
         windows[windowId]?.backgroundColor = GraniteNavigationWindow.backgroundColor
         windows[windowId]?.build(title: title, styleMask: style?.styleMask, center: false, show: true) { [weak self] in
             content()
-                .frame(minWidth: windowSize.width, minHeight: windowSize.height)
                 .padding(.top, titlebarAware ? (self?.windows[windowId]?.titleBarHeight ?? NSWindow.defaultTitleBarHeight) : 0)
         }
         
+        
         self.count = self.windows.keys.count
+    }
+    
+    public func updateWidth(_ value: CGFloat, id: String) {
+        guard let window = windows[id]?.retrieve() else { return }
+        window.setFrame(NSRect(origin: window.frame.origin, size: .init(width: value, height: window.frame.height)), display: true)
     }
     
     public func closeWindow(_ id: String) {
@@ -155,6 +163,10 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
             self?.main?.backgroundColor = GraniteNavigationWindow.backgroundColor
             
             self?.main?.contentViewController = NSHostingController(rootView: content())
+            
+            self?.main?.contentMinSize = self?.size ?? .zero
+            self?.main?.minSize = self?.size ?? .zero
+            self?.main?.setFrame(.init(origin: self?.main?.frame.origin ?? .zero, size: self?.size ?? .zero), display: true)
             
             if show {
                 self?.toggle()

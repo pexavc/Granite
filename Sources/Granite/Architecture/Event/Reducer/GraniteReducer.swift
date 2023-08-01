@@ -76,12 +76,12 @@ extension AnyGraniteReducer {
     }
     
     public var idSync : UUID {
-        if let id = Storage.shared.value(at: Storage.ExpeditionIdentifierKey(id: "\(Self.self)"/*String(describing: self)*/, keyPath: \Self.self)) as? UUID {
+        if let id = Storage.shared.value(at: Storage.ExpeditionIdentifierKey(id: "\(Self.self)" /*String(describing: self)*/, keyPath: \Self.idSync)) as? UUID {
             return id
         }
         else {
             let id = UUID()
-            Storage.shared.setValue(id, at: Storage.ExpeditionIdentifierKey(id: "\(Self.self)"/*String(describing: self)*/, keyPath: \Self.self))
+            Storage.shared.setValue(id, at: Storage.ExpeditionIdentifierKey(id: "\(Self.self)"/*String(describing: self)*/, keyPath: \Self.idSync))
             return id
         }
     }
@@ -149,7 +149,7 @@ extension GraniteReducer {
     
     //instanced version of broadcast
     public var beam : GraniteSignal.Payload<GranitePayload?> {
-        Storage.shared.value(at: "\(Self.self)_beam") {
+        Storage.shared.value(at: "\(String(describing: self))_beam") {
             GraniteSignal.Payload<GranitePayload?>()
         }
     }

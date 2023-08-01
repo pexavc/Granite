@@ -21,6 +21,7 @@ extension View {
         UINavigationBar.appearance().isOpaque = true
         
         if #available(iOS 15, *) {
+            //TODO: customizable prop
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
             appearance.shadowColor = .clear
@@ -38,25 +39,46 @@ extension View {
                     .environment(\.graniteNavigationStyle,
                                   .init(backgroundColor: backgroundColor))
             } else {
-                NavigationView {
-                    ZStack(alignment: .top) {
-                        backgroundColor
-                            .ignoresSafeArea()
-                            .frame(maxWidth: .infinity,
-                                   maxHeight: .infinity)
-                        
-                        #if os(iOS)
-                        self
-                            .background(backgroundColor)
-                            .navigationViewStyle(.stack)
-                        #else
-                        self
-                            .background(backgroundColor)
-                        #endif
+                if #available(macOS 13.0, iOS 16.0, *) {
+                    NavigationStack {
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            
+                            #if os(iOS)
+                            self
+                                .background(backgroundColor)
+                            #else
+                            self
+                                .background(backgroundColor)
+                            #endif
+                        }
                     }
+                    .environment(\.graniteNavigationStyle,
+                                  .init(backgroundColor: backgroundColor))
+                } else {
+                    NavigationView {
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            
+                            #if os(iOS)
+                            self
+                                .background(backgroundColor)
+                                .navigationViewStyle(.stack)
+                            #else
+                            self
+                                .background(backgroundColor)
+                            #endif
+                        }
+                    }
+                    .environment(\.graniteNavigationStyle,
+                                  .init(backgroundColor: backgroundColor))
                 }
-                .environment(\.graniteNavigationStyle,
-                              .init(backgroundColor: backgroundColor))
             }
         }
     }
@@ -92,34 +114,64 @@ extension View {
                     .environment(\.graniteNavigationStyle,
                                   .init(backgroundColor: backgroundColor))
             } else {
-                NavigationView {
-                    #if os(iOS)
-                    ZStack(alignment: .top) {
-                        backgroundColor
-                            .ignoresSafeArea()
-                            .frame(maxWidth: .infinity,
-                                   maxHeight: .infinity)
-                        self
-                            .background(backgroundColor)
-                            .navigationViewStyle(.stack)
+                if #available(macOS 13.0, iOS 16.0, *) {
+                    NavigationStack {
+                        #if os(iOS)
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            self
+                                .background(backgroundColor)
+                        }
+                        .navigationBarTitle("", displayMode: .inline)
+                        .navigationBarHidden(true)
+                        #else
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            self
+                                .background(backgroundColor)
+                        }
+                        #endif
                     }
-                    .navigationBarTitle("", displayMode: .inline)
-                    .navigationBarHidden(true)
-                    #else
-                    ZStack(alignment: .top) {
-                        backgroundColor
-                            .ignoresSafeArea()
-                            .frame(maxWidth: .infinity,
-                                   maxHeight: .infinity)
-                        self
-                            .background(backgroundColor)
+                    .environment(\.graniteNavigationStyle,
+                                  .init(leadingButtonKind: .customView,
+                                        backgroundColor: backgroundColor,
+                                        leadingItem: leadingItem))
+                } else {
+                    NavigationView {
+                        #if os(iOS)
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            self
+                                .background(backgroundColor)
+                                .navigationViewStyle(.stack)
+                        }
+                        .navigationBarTitle("", displayMode: .inline)
+                        .navigationBarHidden(true)
+                        #else
+                        ZStack(alignment: .top) {
+                            backgroundColor
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity,
+                                       maxHeight: .infinity)
+                            self
+                                .background(backgroundColor)
+                        }
+                        #endif
                     }
-                    #endif
+                    .environment(\.graniteNavigationStyle,
+                                  .init(leadingButtonKind: .customView,
+                                        backgroundColor: backgroundColor,
+                                        leadingItem: leadingItem))
                 }
-                .environment(\.graniteNavigationStyle,
-                              .init(leadingButtonKind: .customView,
-                                    backgroundColor: backgroundColor,
-                                    leadingItem: leadingItem))
             }
         }
     }

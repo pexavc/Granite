@@ -148,6 +148,7 @@ public struct NavigationPassthroughView<Component: View>: View {
     @Binding var isActive: Bool
     
     @Environment(\.graniteNavigationStyle) var style
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     #if os(iOS)
     let generator = UIImpactFeedbackGenerator(style: .light)
@@ -166,6 +167,7 @@ public struct NavigationPassthroughView<Component: View>: View {
             #if os(iOS)
             generator.prepare()
             generator.impactOccurred()
+            presentationMode.wrappedValue.dismiss()
             #endif
             self.$isActive.wrappedValue = false
         }) {

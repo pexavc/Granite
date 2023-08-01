@@ -40,19 +40,9 @@ extension View {
                                  title: String = "",
                                  style: GraniteNavigationWindowStyle = .default,
                                  @ViewBuilder component : @escaping (() -> C)) -> some View {
-        
         let modifier = NavigationRouteViewModifier<C>(isTargetActive: condition, useTarget: true, title: title, style: style, component: component)
         
-        #if os(iOS)
-        return VStack(spacing: 0) {
-            GraniteRoute()
-                .modifier(modifier)
-            self
-        }
-        #else
         return self.modifier(modifier)
-        #endif
-        
     }
     
     public func route<C: View>(title: String = "",
@@ -245,6 +235,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
 }
 
 public struct GraniteRoute: View {
+    public init(){}
     public var body: some View {
         EmptyView()
     }

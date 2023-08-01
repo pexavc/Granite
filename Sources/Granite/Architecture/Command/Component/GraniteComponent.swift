@@ -47,13 +47,13 @@ public protocol GraniteComponent: AnyGraniteComponent, Identifiable, View, Finda
     associatedtype ComponentView: View
     
     var center: GenericGraniteCenter { get set }
+    var listeners: Void { get }
     @ViewBuilder var view: Self.ComponentView { get }
 }
 
 extension GraniteComponent {
     //TODO: cache locate result
     public var locate: Command<Self.GenericGraniteCenter>? {
-        
         let mirror = Mirror(reflecting: self)
         let children = mirror.children
 
@@ -81,6 +81,15 @@ extension GraniteComponent {
     
     public var isLoaded: Bool {
         locate?.command.center.findStore()?.isLoaded == true
+    }
+    
+    public func build(_ behavior: GraniteCommand<Self.GenericGraniteCenter>.BuildBehavior) -> Self {
+        locate?.command.build(behavior)
+        return self
+    }
+    
+    public var listeners: Void {
+        ({ })()
     }
 }
 

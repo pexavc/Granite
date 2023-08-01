@@ -60,7 +60,19 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
     }
     
     func preload() {
-        container.persistence.forceRestore()
+        container.preload()
+    }
+    
+    func sync(shutdown: Bool = false) {
+        container.sync(shutdown: shutdown)
+    }
+    
+    var syncSignal: GraniteSignal.Payload<(State, UUID)> {
+        container.syncSignal
+    }
+    
+    var isSyncing: Bool {
+        container.isSyncing
     }
     
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {

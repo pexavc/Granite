@@ -59,12 +59,10 @@ extension Signal {
 }
 
 extension Signal {
-    
     @discardableResult
     public static func +=(lhs : Self, rhs : @escaping (Value) -> Void) -> AnyCancellable {
         lhs.observe(handler: rhs)
     }
-    
 }
 
 public struct GraniteSignal : Signal {

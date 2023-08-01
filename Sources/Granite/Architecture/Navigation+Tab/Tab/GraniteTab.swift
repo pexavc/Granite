@@ -13,15 +13,18 @@ public struct GraniteTabStyle {
     let background: AnyView
     let paddingTabs: EdgeInsets
     let paddingIcons: EdgeInsets
+    let landscape: Bool
     
     public init(height: CGFloat = 75,
                 backgroundColor: Color = .black,
                 paddingTabs: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0),
                 paddingIcons: EdgeInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0),
+                landscape: Bool = false,
                 @ViewBuilder background: (() -> some View) = { EmptyView() }) {
         self.height = height
         self.paddingTabs = paddingTabs
         self.paddingIcons = paddingIcons
+        self.landscape = landscape
         self.background = AnyView(background())
     }
 }
@@ -55,17 +58,23 @@ public struct GraniteTab : Identifiable, Equatable {
     
     public let component : AnyView
     public let content : AnyView
+    public let split: Bool
+    public let last : Bool
     
     public let id: String
     public let action: (() -> Void)?
     
     public init<Content: View, Component: GraniteComponent>(action: (() -> Void)? = nil,
+                                                            split: Bool = false,
+                                                            last: Bool = false,
                                                             @ViewBuilder component: @escaping (() -> Component),
                                                             @ViewBuilder icon: @escaping (() -> Content)) {
         let componentBuild = component()
         let iconBuild = icon()
-        self.id = String(describing: iconBuild)
+        self.id = String(describing: componentBuild)
         self.action = action
+        self.split = split
+        self.last = last
         self.component = AnyView(componentBuild)
         self.content = AnyView(iconBuild)
     }
@@ -208,15 +217,71 @@ public struct GraniteTabView: View {
     }
     
     public var body: some View {
-        VStack(spacing: 4) {
+        Group {
+            if style.landscape {
+                horizontalView
+            } else {
+                verticalView
+            }
+        }
+    }
+    
+    public var horizontalView: some View {
+        HStack(spacing: 0) {
+            VStack(spacing: 0) {
+                ForEach(tabs) { tab in
+                    if tab.split {
+                        Spacer()
+                    }
+                    Button(action: {
+                        currentTab = indexOf(tab)
+                        
+                        #if os(iOS)
+                        generator.prepare()
+                        generator.impactOccurred()
+                        #endif
+                    }) {
+                        tab
+                            .content
+                            .environment(\.graniteTabSelected, currentTab == indexOf(tab))
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.bottom, tab.last ? 0 : style.paddingIcons.bottom)
+                }
+            }
+            .frame(width: style.height)
+            .frame(maxHeight: .infinity)
+            .padding(.top, style.paddingTabs.top)
+            .padding(.bottom, style.paddingTabs.bottom)
+            .background(style.background)
+            
+            Divider()
+            
             ZStack {
                 ForEach(tabs) { tab in
                     tab
                         .component
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
+                        .environment(\.graniteTabSelected, currentTab == indexOf(tab))
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+    
+    public var verticalView: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                ForEach(tabs) { tab in
+                    tab
+                        .component
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
+                        .environment(\.graniteTabSelected, currentTab == indexOf(tab))
+                }
+            }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            Divider()
             
             VStack {
                 HStack {
@@ -244,7 +309,6 @@ public struct GraniteTabView: View {
             .background(style.background)
         }
     }
-    
 }
 
 extension View {

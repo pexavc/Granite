@@ -18,6 +18,7 @@ public enum Forwarding: String {
 public enum Lifecycle: String {
     case onAppear
     case onDisappear
+    case onTask
     case none
 }
 

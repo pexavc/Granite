@@ -25,6 +25,7 @@ extension Relay: AnyRelay {
 
 @propertyWrapper
 public struct Relay<Service: GraniteService> : DynamicProperty {
+    
     public var id : UUID {
         relay.id
     }
@@ -46,12 +47,14 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     //Changed from @StoreObject, while investigating an issue
     //to reducer events not forwarding from within reducers
     //notes can be found in GraniteReducer.swift
-    @SharedObject(String(reflecting: Self.self)) public var relay : GraniteRelay<Service>
+    @ObservedObject public var relay : GraniteRelay<Service>
     
     let isDiscoverable: Bool
-    public init(isDiscoverable: Bool = true, label: String = "") {
+    public init(_ behavior: GraniteRelayBehavior = .normal,
+                isDiscoverable: Bool = true, label: String = "") {
         self.isDiscoverable = isDiscoverable
-//        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
+        //relay.update(behavior: behavior)
+        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
     }
     
     public func awake() {
@@ -63,3 +66,7 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     }
 }
 
+public enum GraniteRelayBehavior {
+    case normal
+    case detach
+}

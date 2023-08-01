@@ -14,12 +14,16 @@ public protocol Inspectable {
 }
 
 extension Inspectable {
-    func removeObservers() {
-        Prospector.shared.node(for: id)?.remove()
+    func removeObservers(includeChildren: Bool = false) {
+        Prospector.shared.node(for: id)?.remove(includeChildren: includeChildren)
         didRemoveObservers()
     }
     
     func withObservation(_ id: UUID, _ block: (() -> Void)) {
         
+    }
+    
+    public var prospect: Prospect? {
+        Prospector.shared.node(for: self.id)
     }
 }

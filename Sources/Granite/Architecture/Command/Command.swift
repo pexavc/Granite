@@ -34,10 +34,21 @@ public struct Command<C: GraniteCenter> : DynamicProperty {
     var didDisappear: (() -> Void)? {
         command.didDisappear
     }
+    var runTasks: (() -> Void)? {
+        command.runTasks
+    }
     
     //TODO: used to be StoreObject/ObservedObject,
     //Observed object was not propagating changes in a nested view
-    @StateObject public var command : GraniteCommand<C> = .init(.component)
+    @StateObject public var command : GraniteCommand<C>
 
-    public init() {}
+    public init() {
+        _command = .init(wrappedValue: .init(.component))
+    }
+    
+    public init(_ state: C.GenericGraniteState) {
+        var initialCenter: C = .init()
+        initialCenter.state = state
+        _command = .init(wrappedValue: .init(.component, initialCenter: initialCenter))
+    }
 }

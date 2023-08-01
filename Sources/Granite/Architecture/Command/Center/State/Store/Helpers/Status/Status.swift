@@ -16,7 +16,7 @@ precedencegroup StatusBooleanPrecedence {
     assignment: false
 }
 
-public protocol AnyStatus : Codable, Hashable {
+public protocol AnyStatus : Equatable, Codable, Hashable {
     
 }
 

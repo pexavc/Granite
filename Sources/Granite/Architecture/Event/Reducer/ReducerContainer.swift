@@ -90,10 +90,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         
         reducer.signal.bind("signal")
         reducer.attachSignal.bind("attachSignal")
-        
-        if isOnline {
-            reducer.syncSignal.bind("syncSignal", removeObservers: false)
-        }
     }
     
     func observe() {
@@ -114,10 +110,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         
         reducer.attachSignal += { [weak self] value in
             reducer.update(value)
-        }
-        
-        reducer.syncSignal += { [weak self] value in
-            self?.coordinator?.setState(value)
         }
         
         if reducer.isNotifiable {
@@ -175,7 +167,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             //TODO: still haven't proven robustness of this rudimentary threading impl.
             DispatchQueue.main.async { [weak self] in
                 self?.coordinator?.setState(newState)
-                self?.coordinator?.persistStateChanges()
+                //self?.coordinator?.persistStateChanges()
                 
                 //TODO: need to allow an option for sync signal to not fire
                 //from the reducer itself. allowing a chain of @Event(.afters)
@@ -183,10 +175,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
                 //can thus, broadcast to peers
                 
                 self?.thread.async {
-                    if self?.isOnline == true {
-                        self?.reducer?.syncSignal.send(newState)
-                    }
-                    
                     if let reducerType = self?.reducer?.reducerType {
                         self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                     }
@@ -194,14 +182,10 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             }
         } else {
             coordinator?.setState(newState)
-            coordinator?.persistStateChanges()
+            //coordinator?.persistStateChanges()
             
             thread.async { [weak self] in
                 //TODO: same as above
-                if self?.isOnline == true {
-                    self?.reducer?.syncSignal.send(newState)
-                }
-                
                 if let reducerType = self?.reducer?.reducerType {
                     self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                 }

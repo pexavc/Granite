@@ -67,18 +67,20 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     
     var onAppear: [GraniteSignal.Payload<GranitePayload?>]?
     var onDisappear: [GraniteSignal.Payload<GranitePayload?>]?
+    var onTask: [GraniteSignal.Payload<GranitePayload?>]?
     var events: [AnyEvent]?
     var didAppear: (() -> Void)?
     var didDisappear: (() -> Void)?
+    var runTasks: (() -> Void)?
     
     //@Event public var discoveryDiagnostic: DiagnoseTree<Center>.Reducer
     internal var reducers: [AnyReducerContainer] = []
     internal var notifies: [String: AnyNotify] = [:]
     
     fileprivate var kind: GraniteCommandKind
-    fileprivate var buildBehavior: BuildBehavior
+    public var buildBehavior: BuildBehavior
     
-    init(_ kind: GraniteCommandKind) {
+    init(_ kind: GraniteCommandKind, initialCenter: Center? = nil) {
         let id: UUID = .init()
         self.id = id
         self.kind = kind
@@ -87,7 +89,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         Prospector.shared.currentNode?.addChild(id: self.id, label: String(reflecting: Self.self), type: .command)
 //        Prospector.shared.currentNode?.addProspector(self.prospector)
         Prospector.shared.push(id: self.id, .command)
-        center = Center()
+        center = initialCenter ?? Center()
         setup()
         Prospector.shared.pop(.command)
     }
@@ -102,6 +104,10 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     }
     
     func setup() {
+        if case .service(.online) = kind {
+            center.findStore()?.sync()
+        }
+        
         bind()
         observe()
     }
@@ -135,6 +141,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
 //        }
         
         store.willChange.bind("stateWillChange")
+        //store.syncSignal.bind("stateSyncSignal")
     }
     
     func observe() {
@@ -173,6 +180,12 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
             
             self?.lifecycle = .disappeared
         }
+        
+        runTasks = { [weak self] in
+            self?.onTask?.forEach { signal in
+                signal.send(nil)
+            }
+        }
     }
     
     func compile() {
@@ -187,6 +200,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
 
         var onAppearEvents: [AnyEvent] = []
         var onDisappearEvents: [AnyEvent] = []
+        var onTaskEvents: [AnyEvent] = []
         var otherEvents: [AnyEvent] = []
 
         for event in events {
@@ -195,6 +209,8 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
                 onAppearEvents.append(event)
             case .onDisappear:
                 onDisappearEvents.append(event)
+            case .onTask:
+                onTaskEvents.append(event)
             default:
                 otherEvents.append(event)
             }
@@ -204,6 +220,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
 
         self.onAppear = onAppearEvents.map { $0.signal }
         self.onDisappear = onDisappearEvents.map { $0.signal }
+        self.onTask = onTaskEvents.map { $0.signal }
         
         if case .component = kind {
             print("[Granite] \(String(reflecting: Self.self)) \(self.reducers.count) \(self.id)")
@@ -234,6 +251,12 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     public func notify(_ reducerType: AnyGraniteReducer.Type, payload: AnyGranitePayload?) {
 //        print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
         notifies["\(reducerType)"]?.send(payload)
+    }
+}
+
+extension GraniteCommand {
+    func setServiceOffline() {
+        self.kind = .service(.offline)
     }
 }
 

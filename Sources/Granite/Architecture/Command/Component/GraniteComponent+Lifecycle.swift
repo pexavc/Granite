@@ -35,23 +35,59 @@ enum GraniteLifecycle: String, Equatable, Codable {
 
 extension GraniteComponent {
     func lifecycle<Body : View>(_ view : Body) -> some View {
-        return view
+        let relays = self.findRelays()
+        
+        guard let command = locate else {
+            return view
             .onAppear {
-                locate?.didAppear?()
-                
-                let relays = self.findRelays()
                 for relay in relays {
                     relay.awake()
                 }
             }
             .onDisappear {
-                locate?.didDisappear?()
-                
-                let relays = self.findRelays()
                 for relay in relays {
-                    guard relay.isOnline == false else { continue }
                     relay.silence()
                 }
             }
+        }
+        
+        if #available(macOS 12.4, iOS 15, *) {
+            
+            return view
+                .task {
+                    for relay in relays {
+                        relay.awake()
+                    }
+                    
+                    await command.runTasks?()
+                }
+                .onAppear {
+                    command.didAppear?()
+                }
+                .onDisappear {
+                    command.didDisappear?()
+                    
+                    for relay in relays {
+                        relay.silence()
+                    }
+                }
+        } else {
+            
+            return view
+                .onAppear {
+                    for relay in relays {
+                        relay.awake()
+                    }
+                    
+                    command.didAppear?()
+                }
+                .onDisappear {
+                    command.didDisappear?()
+                    
+                    for relay in relays {
+                        relay.silence()
+                    }
+                }
+        }
     }
 }

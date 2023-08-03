@@ -12,7 +12,7 @@ import SwiftUI
 extension View {
     public func graniteNavigation(backgroundColor: Color = .black, disable: Bool = false) -> some View {
         #if os(iOS)
-        UINavigationBar.appearance().isUserInteractionEnabled = false
+        //UINavigationBar.appearance().isUserInteractionEnabled = false
         UINavigationBar.appearance().backgroundColor = .clear
         UINavigationBar.appearance().barTintColor = .clear
         UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
@@ -88,13 +88,13 @@ extension View {
                                   @ViewBuilder leadingItem: @escaping () -> some View) -> some View {
         
         #if os(iOS)
-        UINavigationBar.appearance().isUserInteractionEnabled = false
+//        UINavigationBar.appearance().isUserInteractionEnabled = false
         UINavigationBar.appearance().backgroundColor = UIColor(backgroundColor)
-        UINavigationBar.appearance().barTintColor = .clear
-        UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
+//        UINavigationBar.appearance().barTintColor = .clear
+//        UINavigationBar.appearance().setBackgroundImage(UIImage(), for: .default)
         UINavigationBar.appearance().shadowImage = UIImage()
-        UINavigationBar.appearance().tintColor = .clear
-        UINavigationBar.appearance().isOpaque = true
+//        UINavigationBar.appearance().tintColor = .clear
+//        UINavigationBar.appearance().isOpaque = true
         
         if #available(iOS 15, *) {
             let appearance = UINavigationBarAppearance()

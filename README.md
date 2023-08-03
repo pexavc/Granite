@@ -42,12 +42,11 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
      - An iOS/iPadOS virtual portfolio for Stocks. With on-device training
          - Big data management and storage, with Stock/time-series data dating older than decade or more.
          - High throughput within `GraniteComponents` when training data for the Generative Forecasting or processing updates when syncing Stocks and displaying changes in a portfolio.
-  - [Neatia](https://apps.apple.com/us/app/neatia/id6449069312)
-     - A macOS GPT/ChatBot client and prompt creator/organizer. 
+  - [Lemur](https://github.com/neatia/lemur)
+     - A iOS/macOS client for the federated link aggregation service, Lemmy. 
          - Network interfacing
-         - High throughput between `GraniteRelays` for query/response interactions
-         - Payment processing and Payment state management. 
-             - Uses another personal and simple [StoreKit2 interface](https://github.com/pexavc/VaultKit) as well.
+         - High throughput between `GraniteRelays` for account/config/content interaction
+
 - Apps in Development that WILL use `Granite`
   - [Marble](https://github.com/pexavc/LaMarque) This was initially built with an earlier version of the Granite design pattern.
      - An Audio/Video music visualizer that uses Metal to render textures at 60FPS+. With multiple instance in 1 page running at 30FPS+.

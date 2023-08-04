@@ -53,7 +53,7 @@ final public class FilePersistence : AnyPersistence {
                 return
             }
             
-            //print("[Granite] saving \(key)")
+            print("[Granite] saving \(key)")
             
             try data.write(to: url)
         }

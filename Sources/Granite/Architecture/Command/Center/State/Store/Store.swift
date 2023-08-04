@@ -75,6 +75,11 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.isSyncing
     }
     
+    /*
+     TODO:
+     - Add debounce function
+     - Add manual save function
+     */
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
         container = .init(storage: storage, autoSave: autoSave)
     }

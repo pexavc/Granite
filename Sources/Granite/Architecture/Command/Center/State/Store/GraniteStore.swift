@@ -91,9 +91,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
             .removeDuplicates()
             .sink { [weak self] status in
                 if status, let state = self?.state {
+                    self?.pausable?.state = .normal
                     self?.willChange.send(state)
                     self?.didLoad.send()
-                    self?.pausable?.state = .normal
                 }
         }.store(in: &cancellables)
         

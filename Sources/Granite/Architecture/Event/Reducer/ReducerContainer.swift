@@ -167,7 +167,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             //TODO: still haven't proven robustness of this rudimentary threading impl.
             DispatchQueue.main.async { [weak self] in
                 self?.coordinator?.setState(newState)
-                //self?.coordinator?.persistStateChanges()
+                self?.coordinator?.persistStateChanges()
                 
                 //TODO: need to allow an option for sync signal to not fire
                 //from the reducer itself. allowing a chain of @Event(.afters)
@@ -182,7 +182,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             }
         } else {
             coordinator?.setState(newState)
-            //coordinator?.persistStateChanges()
+            coordinator?.persistStateChanges()
             
             thread.async { [weak self] in
                 //TODO: same as above

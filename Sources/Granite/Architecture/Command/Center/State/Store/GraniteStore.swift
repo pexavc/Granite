@@ -83,6 +83,8 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                     Task.detached {
                         signal.send((state, id))
                     }
+                } else if self?.autoSave == true {
+                    self?.persistence.save()
                 }
         }
         pausable?.store(in: &cancellables)
@@ -121,6 +123,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     }
     
     func preload() {
+        self.pausable?.state = .normal
         persistence.forceRestore()
     }
     

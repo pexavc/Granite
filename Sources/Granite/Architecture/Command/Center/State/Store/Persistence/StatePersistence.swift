@@ -28,8 +28,8 @@ public struct StatePersistence<State : Codable> {
         self.isLoaded = loaded
     }
     
-    public func save() {
-        storage.save(state: getState())
+    public func save(_ state: State? = nil) {
+        storage.save(state: state ?? getState())
     }
     
     public func restore() {

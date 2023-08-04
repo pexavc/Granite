@@ -84,7 +84,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                         signal.send((state, id))
                     }
                 } else if self?.autoSave == true {
-                    self?.persistence.save()
+                    self?.persistence.save(state)
                 }
         }
         pausable?.store(in: &cancellables)
@@ -103,7 +103,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
             guard self?.id != id else {
                 //TODO: debounce?
                 if self?.autoSave == true {
-                    self?.persistence.save()
+                    self?.persistence.save(state)
                 }
                     
                 return

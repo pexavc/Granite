@@ -58,6 +58,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     
     internal var cancellables = Set<AnyCancellable>()
     internal var pausable: PausableSinkSubscriber<State, Never>? = nil
+    internal var pausableLoaded: PausableSinkSubscriber<Bool, Never>? = nil
     fileprivate var persistStateChangesCancellable : AnyCancellable?
     
     fileprivate let storage : AnyPersistence
@@ -78,26 +79,27 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                 
                 let shouldSync = self?.isSyncing == true
                 let id = self?.id ?? .init()
-                guard let signal = self?.syncSignal else { return }
-                if shouldSync {
+                
+                if let signal = self?.syncSignal,
+                   shouldSync {
                     Task.detached {
                         signal.send((state, id))
                     }
-                } else if self?.autoSave == true {
-                    self?.persistence.save(state)
                 }
         }
         pausable?.store(in: &cancellables)
         
-        $isLoaded
+        pausableLoaded = $isLoaded
             .removeDuplicates()
-            .sink { [weak self] status in
+            .pausableSink { [weak self] status in
                 if status, let state = self?.state {
                     self?.pausable?.state = .normal
                     self?.willChange.send(state)
                     self?.didLoad.send()
                 }
-        }.store(in: &cancellables)
+        }
+        pausableLoaded?.store(in: &cancellables)
+        pausableLoaded?.state = .normal
         
         syncSignal += { [weak self] (state, id) in
             guard self?.id != id else {
@@ -124,13 +126,19 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     
     func preload() {
         self.pausable?.state = .normal
+        self.pausableLoaded?.state = .stopped
         persistence.forceRestore()
     }
     
+    func enable() {
+        self.pausable?.state = .normal
+    }
+    
     deinit {
-        if autoSave {
-            self.persistence.save()
-        }
+        //TODO: doesn't seem necessary and is a expensive op
+//        if autoSave {
+//            self.persistence.save()
+//        }
         
         cancellables.forEach {
             $0.cancel()
@@ -140,6 +148,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         
         pausable?.cancel()
         pausable = nil
+        
+        pausableLoaded?.cancel()
+        pausableLoaded = nil
         
         persistStateChangesCancellable?.cancel()
         persistStateChangesCancellable = nil

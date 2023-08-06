@@ -59,6 +59,10 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.didLoad
     }
     
+    func enable() {
+        container.enable()
+    }
+    
     func preload() {
         container.preload()
     }
@@ -93,7 +97,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         */
         guard autoSave else { return }
         if preload {
-            container.persistence.forceRestore()
+            self.preload()
         } else {
             container.persistence.restore()
         }

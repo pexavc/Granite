@@ -47,6 +47,8 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     //Changed from @StoreObject, while investigating an issue
     //to reducer events not forwarding from within reducers
     //notes can be found in GraniteReducer.swift
+    
+    //@SharedObject(String(reflecting: Self.self)) public var relay : GraniteRelay<Service>
     @ObservedObject public var relay : GraniteRelay<Service>
     
     let isDiscoverable: Bool

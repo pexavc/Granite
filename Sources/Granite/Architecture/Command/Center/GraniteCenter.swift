@@ -52,4 +52,8 @@ extension GraniteCenter {
 
         return children.first { $0.value as? Store<GenericGraniteState> != nil }?.value as? Store<GenericGraniteState>
     }
+    
+    public func save() {
+        findStore()?.projectedValue.persistence.save()
+    }
 }

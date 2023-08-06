@@ -39,6 +39,8 @@ public struct StatePersistence<State : Codable> {
                     setState(state)
                     isLoaded(true)
                 }
+            } else {
+                save()
             }
         }
     }

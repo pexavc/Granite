@@ -110,7 +110,7 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
         case .paused, .stopped:
             return .none
         default:
-            return .unlimited
+            return .none
         }
     }
     

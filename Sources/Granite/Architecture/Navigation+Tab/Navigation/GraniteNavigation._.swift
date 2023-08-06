@@ -234,9 +234,9 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
     }
     
     public func body(content: Content) -> some View {
-        ZStack {
             
-            #if os(iOS)
+        #if os(iOS)
+        ZStack {
             style.backgroundColor
                 .ignoresSafeArea()
                 .frame(maxWidth: .infinity,
@@ -252,22 +252,22 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                         }
                     }
                 }
-            #else
-            VStack(spacing: 0) {
-                if self.trailingItems != nil {
-                    HStack {
-                        trailingView
-                    }
-                    .frame(height: 24)
-                    .padding(.horizontal, 16)
-                }
-                
-                content
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-            }
-            #endif
         }
+        #else
+        VStack(spacing: 0) {
+            if self.trailingItems != nil {
+                HStack {
+                    trailingView
+                }
+                .frame(height: 24)
+                .padding(.horizontal, 16)
+            }
+            
+            content
+                .ignoresSafeArea()
+                .frame(maxWidth: .infinity,
+                       maxHeight: .infinity)
+        }
+        #endif
     }
 }

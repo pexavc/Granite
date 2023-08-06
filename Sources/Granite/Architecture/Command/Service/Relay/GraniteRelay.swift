@@ -84,7 +84,7 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     }
     
     func bind() {
-            
+        
         let events = self.findCompileableEvents()
         
         self.reducers = events.flatMap { $0.compile(self, properties: .init(isOnline: self.kind == .online)) }
@@ -104,6 +104,38 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
                     self?.pendingUpdates = true
                 }
             }
+        }
+        
+        /*
+         Moving the syncSignal here from State seems
+         to resolve the memory issues vs having it in GraniteState
+         releases are done when relays remove observers
+         
+         Commands would have called sync too since they share state
+         types, which would have been unnecessary
+         
+         TODO: a slight retainment (~1mb can be observed, but the source may not be here
+         */
+        store.syncSignal += { [weak self] (state, id) in
+            guard store.id != id else {
+                //TODO: debounce?
+                if store.autoSave == true {
+                    store.save(state)
+                }
+
+                return
+            }
+            
+            store.silence()
+            self?.update(state)
+            DispatchQueue.main.async { [weak self] in
+                if self?.isSilenced == false {
+                    self?.objectWillChange.send()
+                } else {
+                    self?.pendingUpdates = true
+                }
+            }
+            store.awake()
         }
         
         guard isDiscoverable else { return }

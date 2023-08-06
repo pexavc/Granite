@@ -156,4 +156,58 @@ public struct GraniteLogger {
                type: .error,
                logger.helper+"\(symbol)\(focusText(focus))\n"+text+"\n"+logger.helper+"\n🁡🁡🁡🁡🁡🁡\(focusText(focus))")
     }
+    
+    //New Log Format
+    public enum Level: Int32, CustomStringConvertible {
+        case panic = 0
+        case fatal = 8
+        case error = 16
+        case warning = 24
+        case info = 32
+        case verbose = 40
+        case debug = 48
+        case trace = 56
+        
+        public var description: String {
+            switch self {
+            case .panic:
+                return "panic"
+            case .fatal:
+                return "fault"
+            case .error:
+                return "error"
+            case .warning:
+                return "warning"
+            case .info:
+                return "info"
+            case .verbose:
+                return "verbose"
+            case .debug:
+                return "debug"
+            case .trace:
+                return "trace"
+            }
+        }
+    }
+    
+    public static var currentLevel: GraniteLogger.Level = .debug
+}
+
+@inline(__always) func GraniteLog(_ message: CustomStringConvertible,
+                                  level: GraniteLogger.Level = .warning,
+                                  file: String = #file,
+                                  function: String = #function,
+                                  line: Int = #line) {
+    if level.rawValue <= GraniteLogger.currentLevel.rawValue {
+        let fileName = (file as NSString).lastPathComponent
+        print("[\(level)] Granite: \(fileName):\(line) \(function) | \(message)")
+    }
+}
+
+protocol Nameable {
+}
+extension Nameable {
+    var NAME: String {
+        String(reflecting: Self.self)
+    }
 }

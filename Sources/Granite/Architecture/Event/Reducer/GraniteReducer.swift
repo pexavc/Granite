@@ -28,41 +28,14 @@ public protocol AnyGraniteReducer: Findable {
     var notifiable: Bool { get }
 }
 
-
-/*
- TODO: MAJOR
- - Online services cannot pass events passed 2 reducers
- - If there is a referenced response reducer it needs to be called or removed
- state changes in the callee will not persist
- 
- - Payload property wrapper not allowing state changes to persist. it's as if
- it blocks all the other signals in the online service's stack
- -- a workaround is making a reducer alternative where payload is a typealias
- --- this does solve the necessary optional on payloads, might be a better
- overall
- 
- - even though in online mode, the latest changes are added, the initial reducer
- in a response chain is the final state that is persisted...
- 
- - need to look at attaching events for "after" events.
- 
- 
- // 12-21-22
- // ALL OF THE ABOVE HAVE BEEN ADDRESSED WITH A SIMPLE UPDATE
- // all signals are not shared except for one, it is called syncSignal below.
- // it is only fired at the end of the reducer to syncStates with all services
- // for some reason doing it this way made it more reliable. Since the id
- // needed to be shared via 'Self.self' not 'String(describing: self)'
- // most likely it was intializing a fresh signal before the signal's observer
- // was prepared, and before the signal sent the notification to its subscribers.
- */
-
 //TODO: This is not friendly for stored Events in Components that have multiple instances
 //For each instance shares the observer child that is to a singular signal for example
 //when one deinits, all the other signals will not observe
 //or, only the latest will
 //these need to somehow be copied and removed per instance rather
 //then using the storage to pull the same one based on this protocol description
+//
+//08/2023 the above may have been resolved with recent sync changes?
 extension AnyGraniteReducer {
     public var id : UUID {
         if let id = Storage.shared.value(at: Storage.ExpeditionIdentifierKey(id: String(describing: self), keyPath: \Self.self)) as? UUID {

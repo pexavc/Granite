@@ -51,22 +51,12 @@ extension Prospector {
     
     func push(id : UUID, _ type: ProspectType = .none) {
         scope.append(id)
-        
-//        if type != .none {
-//            scopeBench.append((type, CFAbsoluteTimeGetCurrent()))
-//        }
     }
     
     func pop(_ type: ProspectType = .none) {
         guard scope.last != nil else {
             return
         }
-        
-//        if type != .none {
-//
-//            let value = scopeBench.removeLast()
-//            print("{TEST} \(value.0) - build time: \(CFAbsoluteTimeGetCurrent() - value.1)")
-//        }
         
         scope.removeLast()
     }

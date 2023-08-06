@@ -47,7 +47,7 @@ extension Signal {
     @discardableResult
     public func observe(handler : @escaping (Value) -> Void) -> AnyCancellable {
         let observer = Prospect.Node<Value>(action: handler)
-
+        
         publisher.subscribe(observer)
         
         Prospector.shared.currentNode?.addProspect(observer, for: id)

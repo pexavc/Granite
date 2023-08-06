@@ -18,7 +18,8 @@ extension Storage {
     
 }
 
-public enum GraniteCommandKind {
+public enum GraniteCommandKind: CustomStringConvertible {
+    
     case service(GraniteRelayKind)
     case component
     
@@ -30,13 +31,22 @@ public enum GraniteCommandKind {
             return false
         }
     }
+    
+    public var description: String {
+        switch self {
+        case .service(let relayKind):
+            return "🛸\(relayKind == .online ? "[🛰]" : "")"
+        case .component:
+            return "📡"
+        }
+    }
 }
 
 /*
  A GraniteComponent's and GraniteService's Core event router,
  state manager, and responder.
 */
-public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prospectable, Director, ObservableObject {
+public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prospectable, Director, Nameable, ObservableObject {
     public enum BuildBehavior {
         case dependency(AnyGranitePayload?)
         case none
@@ -129,24 +139,14 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
          
          This is due to the recursive nature of Event findind in
          @Event nesting
+         
+         Update: 08/2023
+         the change was done a while ago, but preloading service states
+         `async` solved slow responsiveness.
          */
         compile()
-//        self.events = center.findEvents()
-//        for event in events ?? [] {
-//            event.intermediateSignal += { value in
-//                Prospector.shared.push(id: self.id, .command)
-//                if let compiledEvent = event as? CompileableEvent {
-//                    let containers = compiledEvent.compile(self, properties: .init(isOnline: self.kind.isOnline))
-//                    self.reducers.removeAll(where: { container in containers.map { $0.label }.contains(container.label) })
-//                    self.reducers.append(contentsOf: containers)
-//                    event.signal.send(value)
-//                }
-//                Prospector.shared.pop(.command)
-//            }
-//        }
         
         store.willChange.bind("stateWillChange")
-        //store.syncSignal.bind("stateSyncSignal")
     }
     
     func observe() {
@@ -155,6 +155,16 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         guard let changeSignal = (store.willChange as? GraniteSignal.Payload<Center.GenericGraniteState>) else {
             return
         }
+        
+        /*
+         We want to update the UI with state changes
+         Services have relays to handle updates onto the UI
+         this, would be redundant
+         
+         lifecycle observers don't affect services
+         */
+        
+        guard case .component = kind else { return }
         
         changeSignal += { [weak self] _ in
             self?.objectWillChange.send()
@@ -228,7 +238,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         self.onTask = onTaskEvents.map { $0.signal }
         
         if case .component = kind {
-            print("[Granite] \(String(reflecting: Self.self)) \(self.reducers.count) \(self.id)")
+            GraniteLog("\(NAME) \(kind) | [\(reducers.count)] 🛥 | \(self.id)", level: .debug)
         }
     }
     
@@ -254,8 +264,10 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
      call that is being made.
     */
     public func notify(_ reducerType: AnyGraniteReducer.Type, payload: AnyGranitePayload?) {
-//        print("[Granite] \(String(reflecting: Self.self)) \(reducerType) \(CFAbsoluteTimeGetCurrent()) // isMain: \(Thread.isMainThread)")
-        notifies["\(reducerType)"]?.send(payload)
+        if let notify = notifies["\(reducerType)"] {
+            GraniteLog("\(NAME) \(kind) notify: [\(reducerType)] | Main 🧵?: \(Thread.isMainThread)", level: .debug)
+            notify.send(payload)
+        }
     }
 }
 

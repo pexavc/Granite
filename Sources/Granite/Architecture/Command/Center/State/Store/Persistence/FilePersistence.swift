@@ -34,7 +34,7 @@ final public class FilePersistence : AnyPersistence {
                                                      attributes: nil)
         }
         catch let error {
-            print("[Granite] FilePersistence: \(error.localizedDescription)")
+            GraniteLog(error.localizedDescription, level: .error)
         }
     }
     
@@ -53,12 +53,12 @@ final public class FilePersistence : AnyPersistence {
                 return
             }
             
-            print("[Granite] saving \(key)")
+            GraniteLog(key, level: .info)
             
             try data.write(to: url)
         }
         catch let error {
-            print("[Granite] FilePersistence '\(key)' / \(error)")
+            GraniteLog("key: \(key) | error: \(error.localizedDescription)", level: .error)
         }
     }
     
@@ -66,16 +66,15 @@ final public class FilePersistence : AnyPersistence {
         let decoder = PropertyListDecoder()
         
         guard let data = try? Data(contentsOf: url) else {
-            print("[Granite] failed to restore: \(key)")
+            GraniteLog(key, level: .error)
             return nil
         }
         
         do {
-            //print("[Granite] restoring: \(key)")
             return try decoder.decode(State.self, from: data)
         }
         catch let error {
-            print("[Granite] FilePersistence '\(key)' / \(error)")
+            GraniteLog("key: \(key) | error: \(error.localizedDescription)", level: .error)
             return nil
         }
     }

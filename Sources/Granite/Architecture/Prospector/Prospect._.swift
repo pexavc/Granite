@@ -18,6 +18,7 @@ public enum ProspectType: String {
     case event
     case expedition
     case signal
+    case state
     case none
 }
 

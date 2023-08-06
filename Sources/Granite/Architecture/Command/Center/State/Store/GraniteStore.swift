@@ -27,17 +27,17 @@ extension Storage {
  A GraniteState can be wrapped with a GraniteStore
  inwhich observers notify linked Components and Services.
 */
-public class GraniteStore<State : GraniteState>: ObservableObject {
+public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     
     public let id = UUID()
     
     public var idSync : UUID {
-        if let id = Storage.shared.value(at: Storage.StoreIdentifierKey(id: String(describing: self), keyPath: \GraniteStore<State>.idSync)) as? UUID {
+        if let id = Storage.shared.value(at: Storage.StoreIdentifierKey(id: String(reflecting: self), keyPath: \GraniteStore<State>.idSync)) as? UUID {
             return id
         }
         else {
             let id = UUID()
-            Storage.shared.setValue(id, at: Storage.StoreIdentifierKey(id: String(describing: self), keyPath: \GraniteStore<State>.idSync))
+            Storage.shared.setValue(id, at: Storage.StoreIdentifierKey(id: String(reflecting: self), keyPath: \GraniteStore<State>.idSync))
             return id
         }
     }
@@ -59,7 +59,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
     internal var cancellables = Set<AnyCancellable>()
     internal var pausable: PausableSinkSubscriber<State, Never>? = nil
     internal var pausableLoaded: PausableSinkSubscriber<Bool, Never>? = nil
-    fileprivate var persistStateChangesCancellable : AnyCancellable?
+    //TODO: remove?
+    fileprivate var persistStateChangesCancellable : AnyCancellable? = nil
+    fileprivate var syncCancellable: AnyCancellable? = nil
     
     fileprivate let storage : AnyPersistence
     let autoSave : Bool
@@ -82,9 +84,14 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
                 
                 if let signal = self?.syncSignal,
                    shouldSync {
+                    
+                    GraniteLog("\(self?.NAME) syncing", level: .debug)
+                    
                     Task.detached {
                         signal.send((state, id))
                     }
+                } else if self?.autoSave == true {
+                    self?.persistence.save(state)
                 }
         }
         pausable?.store(in: &cancellables)
@@ -100,30 +107,33 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
         }
         pausableLoaded?.store(in: &cancellables)
         pausableLoaded?.state = .normal
-        
-        syncSignal += { [weak self] (state, id) in
-            guard self?.id != id else {
-                //TODO: debounce?
-                if self?.autoSave == true {
-                    self?.persistence.save(state)
-                }
-                    
-                return
-            }
-            
-            //pause to avoid sync loop
-            self?.pausable?.state = .stopped
-            self?.state = state
-            //update view
-            self?.willChange.send(state)
-            self?.pausable?.state = .normal
-        }
     }
     
+    /*
+     Sync should be toggled via GraniteCommand
+     GraniteCommand is the core object store of
+     all instance types, Components and Services currently
+     */
     func sync(shutdown: Bool = false) {
         isSyncing = shutdown == false
     }
     
+    /*
+     Extends container to allow calls from outside helps
+     prevent multiple draw calls during state updates
+     */
+    func silence() {
+        pausable?.state = .stopped
+    }
+    
+    func awake() {
+        pausable?.state = .normal
+    }
+    
+    /*
+     Force preload, which is async on the background thread
+     by default, affects Services mostly
+     */
     func preload() {
         self.pausable?.state = .normal
         self.pausableLoaded?.state = .stopped
@@ -139,6 +149,10 @@ public class GraniteStore<State : GraniteState>: ObservableObject {
 //        if autoSave {
 //            self.persistence.save()
 //        }
+//        Prospector.shared.node(for: id)?.remove(includeChildren: false)
+        
+        syncCancellable?.cancel()
+        syncCancellable = nil
         
         cancellables.forEach {
             $0.cancel()

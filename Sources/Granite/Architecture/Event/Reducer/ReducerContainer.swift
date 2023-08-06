@@ -84,7 +84,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
     
     func bind() {
         guard let reducer = self.reducer else {
-            print("Failed to find reducer for container to bind")
+            GraniteLog("🛥: No reducer", level: .error)
             return
         }
         
@@ -94,7 +94,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
     
     func observe() {
         guard let reducer = self.reducer else {
-            print("Failed to find reducer for container to observe")
+            GraniteLog("🛥: No reducer", level: .error)
             return
         }
         

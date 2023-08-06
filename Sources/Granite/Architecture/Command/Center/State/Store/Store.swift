@@ -63,8 +63,20 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.enable()
     }
     
+    func silence() {
+        container.silence()
+    }
+    
+    func awake() {
+        container.awake()
+    }
+    
     func preload() {
         container.preload()
+    }
+    
+    func save(_ state: State? = nil) {
+        container.persistence.save(state)
     }
     
     func sync(shutdown: Bool = false) {

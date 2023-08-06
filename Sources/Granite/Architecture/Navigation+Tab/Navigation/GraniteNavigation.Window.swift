@@ -311,7 +311,7 @@ class AppWindow: NSWindow {
         let visibleFrame = main.visibleFrame
         let startWindowX = (currentMidPoint?.x) ?? ((visibleFrame.midX) - (startingContainer.width / 2))
         let startWindowY = (currentMidPoint?.y) ?? ((visibleFrame.midY) - (startingContainer.height / 2))
-        //        print("[AppWindow] originPoint: \(visibleFrame)")
+        
         var startPoint: CGPoint = .init(x: startWindowX, y: startWindowY)
         if newSize != .zero {
             let diff = newContainer.height - startingContainer.height
@@ -355,7 +355,9 @@ class AppWindow: NSWindow {
     func setSize(_ newSize: CGSize, defaultSize: CGSize) {
         lastPoint = frame.origin
         let origin: CGPoint = newPoint(newSize: newSize, titleBarHeight: self.titlebarHeight, currentMidPoint: lastPoint)
-        print("[AppWindow] \(lastPoint ?? .zero) new: \(origin)")
+        
+        GraniteLog("old: \(lastPoint ?? .zero), new: \(origin))", level: .debug)
+        
         self.setFrame(.init(origin: origin, size: newSize), display: true)
     }
 }

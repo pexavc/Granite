@@ -49,6 +49,8 @@ public struct StatePersistence<State : Codable> {
         if let state : State = storage.restore() {
             setState(state)
             isLoaded(true)
+        } else {
+            save()
         }
     }
     

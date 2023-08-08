@@ -42,7 +42,7 @@ The architecture itself is still a WIP, but currently I have moved onto seeing i
      - An iOS/iPadOS virtual portfolio for Stocks. With on-device training
          - Big data management and storage, with Stock/time-series data dating older than decade or more.
          - High throughput within `GraniteComponents` when training data for the Generative Forecasting or processing updates when syncing Stocks and displaying changes in a portfolio.
-  - [Lemur](https://github.com/neatia/lemur)
+  - [Loom](https://github.com/neatia/Loom)
      - A iOS/macOS client for the federated link aggregation service, Lemmy. 
          - Network interfacing
          - High throughput between `GraniteRelays` for account/config/content interaction

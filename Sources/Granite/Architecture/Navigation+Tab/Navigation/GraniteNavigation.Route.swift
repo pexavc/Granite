@@ -46,9 +46,9 @@ extension View {
     }
     
     public func route<C: View>(title: String = "",
-                               style: GraniteNavigationWindowStyle = .default,
+                               window: GraniteRoute<AnyView>.WindowProperties = .init(),
                                @ViewBuilder component : @escaping (() -> C)) -> some View {
-        let modifier = NavigationRouteViewModifier<C>(title: title, style: style, component: component)
+        let modifier = NavigationRouteViewModifier<C>(title: title, style: window.style, component: component)
         
         return self.modifier(modifier)
     }
@@ -170,19 +170,11 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     }
     
     public func body(content: Content) -> some View {
-        //TODO: onPush fires after onAppear. Should be before
         #if os(iOS)
         if useTarget {
             NavigationLink(isActive: $isTargetActive) {
-                if isTargetActive {
-                    NavigationPassthroughView(isActive: $isTargetActive,
-                                              screen: screen)
-                } else {
-                    EmptyView()
-                        .onAppear {
-                            self.screen.clean()
-                        }
-                }
+                NavigationPassthroughView(isActive: $isTargetActive,
+                                          screen: screen)
             } label: {
                 content
             }
@@ -234,9 +226,65 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     }
 }
 
-public struct GraniteRoute: View {
-    public init(){}
+public struct GraniteRoute<Component: View>: View {
+    public struct WindowProperties {
+        public let title: String
+        public let style: GraniteNavigationWindowStyle
+        
+        public init(title: String = "", style: GraniteNavigationWindowStyle = .default) {
+            self.title = title
+            self.style = style
+        }
+        
+        public static func resizable(size: CGSize) -> WindowProperties {
+            return .init(style: .init(size: size, styleMask: .resizable))
+        }
+        
+        public static func resizable(_ width: CGFloat, _ height: CGFloat) -> WindowProperties {
+            return .init(style: .init(size: .init(width: width, height: height), styleMask: .resizable))
+        }
+    }
+    
+    
+    @Binding var isActive: Bool
+    @State fileprivate var screen: NavigationPassthroughView<Component>.Screen<Component>
+    let window: WindowProperties
+    public init(_ condition: Binding<Bool>,
+                window: WindowProperties = .init(),
+                @ViewBuilder component: @escaping (() -> Component)){
+        self._isActive = condition
+        self._screen = .init(initialValue: .init(component))
+        self.window = window
+    }
+    
     public var body: some View {
+        #if os(iOS)
+        Button {
+        
+        } label : {
+            NavigationLink(isActive: $isActive) {
+                NavigationPassthroughView(isActive: $isActive,
+                                          screen: screen)
+            } label: {
+                Color.clear
+                    .frame(width: 0, height: 0)
+                    .onAppear {
+                        //GraniteLog("Cleaned route screen", level: .debug)
+                        self.screen.clean()
+                    }
+            }
+            .isDetailLink(false)
+        }.buttonStyle(.plain)
+        #else
         EmptyView()
+        .onChange(of: isActive) { value in
+            guard value else { return }
+            GraniteNavigationWindow.shared.addWindow(title: window.title, style: window.style) {
+                NavigationPassthroughView(isActive: $isActive,
+                                          screen: screen)
+            }
+            isActive = false
+        }
+        #endif
     }
 }

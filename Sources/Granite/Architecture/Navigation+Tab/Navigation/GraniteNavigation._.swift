@@ -114,35 +114,36 @@ extension View {
                     .environment(\.graniteNavigationStyle,
                                   .init(backgroundColor: backgroundColor))
             } else {
-                if #available(macOS 13.0, iOS 16.0, *) {
-                    NavigationStack {
-                        #if os(iOS)
-                        ZStack(alignment: .top) {
-                            backgroundColor
-                                .ignoresSafeArea()
-                                .frame(maxWidth: .infinity,
-                                       maxHeight: .infinity)
-                            self
-                                .background(backgroundColor)
-                        }
-                        .navigationBarTitle("", displayMode: .inline)
-                        .navigationBarHidden(true)
-                        #else
-                        ZStack(alignment: .top) {
-                            backgroundColor
-                                .ignoresSafeArea()
-                                .frame(maxWidth: .infinity,
-                                       maxHeight: .infinity)
-                            self
-                                .background(backgroundColor)
-                        }
-                        #endif
-                    }
-                    .environment(\.graniteNavigationStyle,
-                                  .init(leadingButtonKind: .customView,
-                                        backgroundColor: backgroundColor,
-                                        leadingItem: leadingItem))
-                } else {
+                //TODO: a full path based data structure 
+//                if #available(macOS 13.0, iOS 16.0, *) {
+//                    NavigationStack {
+//                        #if os(iOS)
+//                        ZStack(alignment: .top) {
+//                            backgroundColor
+//                                .ignoresSafeArea()
+//                                .frame(maxWidth: .infinity,
+//                                       maxHeight: .infinity)
+//                            self
+//                                .background(backgroundColor)
+//                        }
+//                        .navigationBarTitle("", displayMode: .inline)
+//                        .navigationBarHidden(true)
+//                        #else
+//                        ZStack(alignment: .top) {
+//                            backgroundColor
+//                                .ignoresSafeArea()
+//                                .frame(maxWidth: .infinity,
+//                                       maxHeight: .infinity)
+//                            self
+//                                .background(backgroundColor)
+//                        }
+//                        #endif
+//                    }
+//                    .environment(\.graniteNavigationStyle,
+//                                  .init(leadingButtonKind: .customView,
+//                                        backgroundColor: backgroundColor,
+//                                        leadingItem: leadingItem))
+//                } else {
                     NavigationView {
                         #if os(iOS)
                         ZStack(alignment: .top) {
@@ -171,7 +172,7 @@ extension View {
                                   .init(leadingButtonKind: .customView,
                                         backgroundColor: backgroundColor,
                                         leadingItem: leadingItem))
-                }
+//                }
             }
         }
     }

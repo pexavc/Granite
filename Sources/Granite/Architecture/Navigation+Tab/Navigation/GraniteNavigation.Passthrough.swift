@@ -169,7 +169,6 @@ public struct NavigationPassthroughView<Component: View>: View {
             generator.impactOccurred()
             presentationMode.wrappedValue.dismiss()
             #endif
-            self.$isActive.wrappedValue = false
         }) {
             HStack {
                 switch style.leadingButtonKind {

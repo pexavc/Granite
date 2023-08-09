@@ -101,6 +101,20 @@ extension AnyGraniteReducer {
     }
 }
 
+public enum GraniteReducerBehavior {
+    case task(TaskPriority)
+    case none
+    
+    var isTask: Bool {
+        switch self {
+        case .task:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
 public protocol GraniteReducer: AnyGraniteReducer {
     typealias Reducer = GraniteReducerExecutable<Self>
     
@@ -108,9 +122,12 @@ public protocol GraniteReducer: AnyGraniteReducer {
     associatedtype Metadata: GranitePayload = EmptyGranitePayload
     
     func reduce(state: inout Center.GenericGraniteState)
+    func reduce(state: inout Center.GenericGraniteState) async
     func reduce(state: inout Center.GenericGraniteState, payload: Metadata)
+    func reduce(state: inout Center.GenericGraniteState, payload: Metadata) async
     
     var thread: DispatchQueue? { get }
+    var behavior: GraniteReducerBehavior { get }
     
     init()
 }
@@ -118,6 +135,10 @@ public protocol GraniteReducer: AnyGraniteReducer {
 extension GraniteReducer {
     public var thread: DispatchQueue? {
         nil
+    }
+    
+    public var behavior: GraniteReducerBehavior {
+        .none
     }
     
     //instanced version of broadcast
@@ -130,7 +151,9 @@ extension GraniteReducer {
 
 extension GraniteReducer {
     public func reduce(state: inout Center.GenericGraniteState) {}
+    public func reduce(state: inout Center.GenericGraniteState) async {}
     public func reduce(state: inout Center.GenericGraniteState, payload: Metadata) {}
+    public func reduce(state: inout Center.GenericGraniteState, payload: Metadata) async {}
 }
 
 public protocol EventExecutable {
@@ -142,6 +165,7 @@ public protocol EventExecutable {
     var payload: AnyGranitePayload? { get set }
     var events: [AnyEvent] { get }
     var isNotifiable: Bool { get }
+    var behavior: GraniteReducerBehavior { get }
     
     var thread: DispatchQueue? { get }
     
@@ -155,6 +179,7 @@ public protocol EventExecutable {
     func attach(_ payload: GranitePayload)
     func update(_ payload: GranitePayload?)
     func execute(_ state: AnyGraniteState?) -> AnyGraniteState
+    func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState
     init()
 }
 
@@ -211,6 +236,10 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         expedition.notifiable
     }
     
+    public var behavior: GraniteReducerBehavior {
+        expedition.behavior
+    }
+    
     public enum ListenKind {
         case broadcast
         case beam
@@ -239,11 +268,22 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     public func execute(_ state: AnyGraniteState?) -> AnyGraniteState {
         var mutableState = (state as? Expedition.Center.GenericGraniteState) ?? Expedition.Center.GenericGraniteState()
         
-        
         if let payload = payload as? Expedition.Metadata {
             expedition.reduce(state: &mutableState, payload: payload)
         } else {
             expedition.reduce(state: &mutableState)
+        }
+        
+        return mutableState
+    }
+    
+    public func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState {
+        var mutableState = (state as? Expedition.Center.GenericGraniteState) ?? Expedition.Center.GenericGraniteState()
+        
+        if let payload = payload as? Expedition.Metadata {
+            await expedition.reduce(state: &mutableState, payload: payload)
+        } else {
+            await expedition.reduce(state: &mutableState)
         }
         
         return mutableState

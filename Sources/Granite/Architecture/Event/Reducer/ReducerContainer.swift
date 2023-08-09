@@ -30,7 +30,7 @@ protocol AnyReducerContainer {
 //
 // 01/08/23 which is why we declare @Notify outside of reducers not within..................
 //
-class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectable {
+class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectable, Nameable {
     public var id : UUID = .init()
     
     public var label: String {
@@ -47,6 +47,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
     public let interval: Double
     private var timer: DisplayLinkTimer? = nil
     private var isOnline: Bool
+    private var executionTask: Task<Void, Error>? = nil
     
     var events: [AnyEvent] {
         reducer?.events ?? []
@@ -133,7 +134,16 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
                 self?.execute()
             }
         } else {
-            self.execute()
+            self.executionTask?.cancel()
+            
+            switch reducer?.behavior {
+            case .task(let priority):
+                self.executionTask = Task(priority: priority) { [weak self] in
+                    await self?.executeAsync()
+                }
+            default:
+                self.execute()
+            }
         }
     }
     
@@ -162,8 +172,38 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         }
     }
     
+    func executeAsync() async {
+        
+        //TODO: think about the necessity of before
+        //it does not feel standard or correct to have
+        //
+        for signal in (sideEffects[.before] ?? []){
+            signal.send(reducer?.payload as? GranitePayload)
+        }
+        
+        //TODO: this CAN be a queue, before it hits an after
+        // a basic CS problem
+        
+        if let newState = await self.reducer?.executeAsync(coordinator?.getState()) {
+            updateState(newState)
+        }
+        
+        for signal in (sideEffects[.after] ?? []){
+            signal.send(reducer?.payload as? GranitePayload)
+        }
+    }
+    
     func updateState(_ newState: AnyGraniteState) {
-        if Thread.isMainThread == false {
+        if Thread.isMainThread {
+            coordinator?.setState(newState)
+            
+            thread.async { [weak self] in
+                //TODO: same as above
+                if let reducerType = self?.reducer?.reducerType {
+                    self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
+                }
+            }
+        } else {
             //TODO: still haven't proven robustness of this rudimentary threading impl.
             DispatchQueue.main.async { [weak self] in
                 self?.coordinator?.setState(newState)
@@ -178,16 +218,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
                     if let reducerType = self?.reducer?.reducerType {
                         self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                     }
-                }
-            }
-        } else {
-            coordinator?.setState(newState)
-            //coordinator?.persistStateChanges()
-            
-            thread.async { [weak self] in
-                //TODO: same as above
-                if let reducerType = self?.reducer?.reducerType {
-                    self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
                 }
             }
         }

@@ -29,6 +29,10 @@ extension GraniteService {
     public func preload() {
         locate?.command.center.findStore()?.preload()
     }
+    
+    public func silence() {
+        locate?.command.center.findStore()?.silence()
+    }
 }
 
 extension GraniteService {

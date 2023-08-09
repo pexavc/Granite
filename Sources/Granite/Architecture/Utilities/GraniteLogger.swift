@@ -200,7 +200,7 @@ public struct GraniteLogger {
                                   line: Int = #line) {
     if level.rawValue <= GraniteLogger.currentLevel.rawValue {
         let fileName = (file as NSString).lastPathComponent
-        print("[\(level)] Granite: \(fileName):\(line) \(function) | \(message)")
+        print("[Granite] | \(level) | \(fileName):\(line) \(function) | \(message)")
     }
 }
 

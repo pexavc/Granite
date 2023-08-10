@@ -111,7 +111,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         if preload {
             self.preload()
         } else {
-            container.persistence.restore()
+            container.restore()
         }
     }
 }

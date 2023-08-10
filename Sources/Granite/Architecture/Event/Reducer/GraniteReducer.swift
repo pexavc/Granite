@@ -65,12 +65,6 @@ extension AnyGraniteReducer {
         }
     }
     
-    public var attachGraniteSignal : GraniteSignal.Payload<GranitePayload?> {
-        Storage.shared.value(at: Storage.EventSignalIdentifierKey(id: self.id, keyPath: \AnyGraniteReducer.attachGraniteSignal)) {
-            GraniteSignal.Payload<GranitePayload?>()
-        }
-    }
-    
     public var nudgeNotifyGraniteSignal : GraniteSignal.Payload<GranitePayload> {
         Storage.shared.value(at: Storage.EventSignalIdentifierKey(id: self.id, keyPath: \AnyGraniteReducer.nudgeNotifyGraniteSignal)) {
             GraniteSignal.Payload<GranitePayload>()
@@ -90,10 +84,6 @@ extension AnyGraniteReducer {
     
     public func send(_ payload: GranitePayload) {
         valueSignal.send(payload)
-    }
-    
-    public func attach(_ payload: GranitePayload) {
-        attachGraniteSignal.send(payload)
     }
     
     public var notifiable: Bool {
@@ -161,7 +151,6 @@ public protocol EventExecutable {
     var reducerType : AnyGraniteReducer.Type { get }
     var signal : GraniteSignal.Payload<GranitePayload?> { get }
     var intermediateSignal : GraniteSignal.Payload<GranitePayload?> { get }
-    var attachSignal : GraniteSignal.Payload<GranitePayload?> { get }
     var payload: AnyGranitePayload? { get set }
     var events: [AnyEvent] { get }
     var isNotifiable: Bool { get }
@@ -176,7 +165,6 @@ public protocol EventExecutable {
     func send()
     func send(_ payload: GranitePayload)
     
-    func attach(_ payload: GranitePayload)
     func update(_ payload: GranitePayload?)
     func execute(_ state: AnyGraniteState?) -> AnyGraniteState
     func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState
@@ -204,14 +192,6 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         valueSignal
     }
     
-    public var attachSignal : GraniteSignal.Payload<GranitePayload?> {
-        if isOnline {
-            return synchronousGraniteSignalValue
-        } else {
-            return valueSignal
-        }
-    }
-    
     public var thread: DispatchQueue? {
         expedition.thread
     }
@@ -222,10 +202,6 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     
     public var synchronousGraniteSignalValue : GraniteSignal.Payload<GranitePayload?> {
         expedition.valueSignal
-    }
-    
-    public var synchronousAttachGraniteSignalValue : GraniteSignal.Payload<GranitePayload?> {
-        expedition.attachGraniteSignal
     }
     
     public var payload : AnyGranitePayload?

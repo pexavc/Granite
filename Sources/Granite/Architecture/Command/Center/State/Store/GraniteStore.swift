@@ -144,6 +144,12 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         self.pausable?.state = .normal
     }
     
+    func restore() {
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            self?.persistence.restore()
+        }
+    }
+    
     deinit {
         //TODO: doesn't seem necessary and is a expensive op
 //        if autoSave {

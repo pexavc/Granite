@@ -106,7 +106,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     
     deinit {
         lifecycle = .deLink
-        removeObservers()
+        removeObservers(includeChildren: true)
     }
     
     func build(_ buildBehavior: BuildBehavior) {

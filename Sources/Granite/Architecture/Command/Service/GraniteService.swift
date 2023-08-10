@@ -22,6 +22,10 @@ public protocol GraniteService {
 }
 
 extension GraniteService {
+    public var didLoad: GraniteSignal {
+        locate?.command.center.findStore()?.didLoad ?? .init()
+    }
+    
     public var isLoaded: Bool {
         locate?.command.isLoaded == true
     }

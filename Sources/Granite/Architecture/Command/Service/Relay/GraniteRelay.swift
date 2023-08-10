@@ -60,12 +60,7 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     }
     
     deinit {
-        guard isDiscoverable else {
-            removeObservers()
-            return
-        }
-        
-        removeObservers()
+        removeObservers(includeChildren: true)
     }
     
     public func update(behavior: GraniteRelayBehavior) {

@@ -90,7 +90,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         }
         
         reducer.signal.bind("signal")
-        reducer.attachSignal.bind("attachSignal")
     }
     
     func observe() {
@@ -107,10 +106,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             } else {
                 self?.commit(value)
             }
-        }
-        
-        reducer.attachSignal += { [weak self] value in
-            reducer.update(value)
         }
         
         if reducer.isNotifiable {

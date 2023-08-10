@@ -26,7 +26,6 @@ public protocol AnyEvent: Bindable {
     var forwarding: Forwarding { get }
     var lifecycle: Lifecycle { get }
     var signal: GraniteSignal.Payload<GranitePayload?> { get }
-    var attachSignal: GraniteSignal.Payload<GranitePayload?> { get }
     var intermediateSignal: GraniteSignal.Payload<GranitePayload?> { get }
 }
 
@@ -69,9 +68,6 @@ public struct Event<Executable: EventExecutable>: AnyEvent {
     
     public var signal: GraniteSignal.Payload<GranitePayload?> {
         expedition.signal
-    }
-    public var attachSignal: GraniteSignal.Payload<GranitePayload?> {
-        expedition.attachSignal
     }
     
     var kind: Kind

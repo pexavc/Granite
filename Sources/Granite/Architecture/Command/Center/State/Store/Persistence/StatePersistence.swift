@@ -33,15 +33,13 @@ public struct StatePersistence<State : Codable> {
     }
     
     public func restore() {
-        DispatchQueue.global(qos: .background).async {
-            if let state : State = storage.restore() {
-                DispatchQueue.main.async {
-                    setState(state)
-                    isLoaded(true)
-                }
-            } else {
-                save()
+        if let state : State = storage.restore() {
+            DispatchQueue.main.async {
+                setState(state)
+                isLoaded(true)
             }
+        } else {
+            save()
         }
     }
     

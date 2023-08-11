@@ -59,10 +59,6 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.didLoad
     }
     
-    func enable() {
-        container.enable()
-    }
-    
     func silence() {
         container.silence()
     }

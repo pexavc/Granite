@@ -80,12 +80,18 @@ public struct Event<Executable: EventExecutable>: AnyEvent {
         kind = .forwarding
     }
     
-    public init(interval: Double) {
-        self.expedition = .init()
-        self.forwarding = .after
-        self.interval = interval
+    public init(debounce interval: Double) {
+        self.expedition = .init(debounce: interval)
+        self.forwarding = .none
         lifecycle = .none
-        kind = .timed
+        kind = .basic
+    }
+    
+    public init(throttle interval: Double) {
+        self.expedition = .init(throttle: interval)
+        self.forwarding = .none
+        lifecycle = .none
+        kind = .basic
     }
     
     public init(_ lifecycle: Lifecycle = .none) {

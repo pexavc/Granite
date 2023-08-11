@@ -105,6 +105,12 @@ public enum GraniteReducerBehavior {
     }
 }
 
+public enum GraniteReducerInteraction {
+    case debounce(Double)
+    case throttle(Double)
+    case basic
+}
+
 public protocol GraniteReducer: AnyGraniteReducer {
     typealias Reducer = GraniteReducerExecutable<Self>
     
@@ -151,10 +157,13 @@ public protocol EventExecutable {
     var reducerType : AnyGraniteReducer.Type { get }
     var signal : GraniteSignal.Payload<GranitePayload?> { get }
     var intermediateSignal : GraniteSignal.Payload<GranitePayload?> { get }
+    var beamSignal: GraniteSignal.Payload<GranitePayload?> { get }
+    
     var payload: AnyGranitePayload? { get set }
     var events: [AnyEvent] { get }
     var isNotifiable: Bool { get }
     var behavior: GraniteReducerBehavior { get }
+    var interaction: GraniteReducerInteraction { get }
     
     var thread: DispatchQueue? { get }
     
@@ -169,6 +178,8 @@ public protocol EventExecutable {
     func execute(_ state: AnyGraniteState?) -> AnyGraniteState
     func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState
     init()
+    init(debounce interval: Double)
+    init(throttle interval: Double)
 }
 
 open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable {
@@ -200,6 +211,10 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
      
     public var intermediateSignal : GraniteSignal.Payload<GranitePayload?> = .init()
     
+    public var beamSignal: GraniteSignal.Payload<GranitePayload?> {
+        expedition.beam
+    }
+    
     public var synchronousGraniteSignalValue : GraniteSignal.Payload<GranitePayload?> {
         expedition.valueSignal
     }
@@ -216,6 +231,8 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         expedition.behavior
     }
     
+    public var interaction: GraniteReducerInteraction
+    
     public enum ListenKind {
         case broadcast
         case beam
@@ -227,11 +244,18 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     internal var broadcastCancellables: Set<AnyCancellable> = .init()
     
     required public init() {
-        //let expedition = Expedition()
-        //self.expedition = expedition
+        self.interaction = .basic
         self.payload = expedition.findPayload()
-        //self.events = expedition.findEvents()
-        //self.isNotifiable = expedition.notifiable
+    }
+    
+    required public init(debounce interval: Double) {
+        self.interaction = .debounce(interval)
+        self.payload = expedition.findPayload()
+    }
+    
+    required public init(throttle interval: Double) {
+        self.interaction = .throttle(interval)
+        self.payload = expedition.findPayload()
     }
     
     deinit {

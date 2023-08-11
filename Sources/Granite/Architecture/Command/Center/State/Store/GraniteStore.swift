@@ -140,10 +140,6 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         persistence.forceRestore()
     }
     
-    func enable() {
-        self.pausable?.state = .normal
-    }
-    
     func restore() {
         DispatchQueue.global(qos: .background).async { [weak self] in
             self?.persistence.restore()

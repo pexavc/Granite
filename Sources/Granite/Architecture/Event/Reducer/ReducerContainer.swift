@@ -49,6 +49,8 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
     private var isOnline: Bool
     private var executionTask: Task<Void, Error>? = nil
     
+    public let queue: DispatchQueue
+    
     var events: [AnyEvent] {
         reducer?.events ?? []
     }
@@ -64,6 +66,8 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         self.reducer = reducer
         self.isTimed = isTimed
         self.interval = interval
+        
+        self.queue = .init(label: "granite.reducer.container.\(id.uuidString)", qos: .userInteractive)
         
         self.isOnline = isOnline
         self.reducer?.setOnline(isOnline)
@@ -90,6 +94,7 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         }
         
         reducer.signal.bind("signal")
+        reducer.beamSignal.bind("beamSignal")
     }
     
     func observe() {
@@ -98,13 +103,38 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
             return
         }
         
-        reducer.signal += { [weak self] value in
-            if let thread = reducer.thread {
-                thread.async { [weak self] in
+        switch reducer.interaction {
+        case .debounce(let interval):
+            var signal = reducer.signal//TODO: revisit mutability + storage
+            signal.debounce(interval: interval, scheduler: queue) += { [weak self] value in
+                if let thread = reducer.thread {
+                    thread.async { [weak self] in
+                        self?.commit(value)
+                    }
+                } else {
                     self?.commit(value)
                 }
-            } else {
-                self?.commit(value)
+            }
+        case .throttle(let interval):
+            var signal = reducer.signal//TODO: revisit mutability + storage
+            signal.throttle(interval: interval, scheduler: queue) += { [weak self] value in
+                if let thread = reducer.thread {
+                    thread.async { [weak self] in
+                        self?.commit(value)
+                    }
+                } else {
+                    self?.commit(value)
+                }
+            }
+        case .basic:
+            reducer.signal += { [weak self] value in
+                if let thread = reducer.thread {
+                    thread.async { [weak self] in
+                        self?.commit(value)
+                    }
+                } else {
+                    self?.commit(value)
+                }
             }
         }
         

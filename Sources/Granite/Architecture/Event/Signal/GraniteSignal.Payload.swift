@@ -19,10 +19,20 @@ extension GraniteSignal {
         public let id = UUID()
         
         public var publisher: AnyPublisher<Value, Never> {
+            interactionPublisher ?? basicPublisher
+        }
+        
+        private var basicPublisher: AnyPublisher<Value, Never> {
             subject
                 .eraseToAnyPublisher()
-            
         }
+        
+        private var interactionPublisher: AnyPublisher<Value, Never>? {
+            debouncePublisher ?? throttlePublisher
+        }
+        
+        private var debouncePublisher: AnyPublisher<Value, Never>?
+        private var throttlePublisher: AnyPublisher<Value, Never>?
         
         public internal(set) var lastValue : Value? {
             get {
@@ -47,6 +57,19 @@ extension GraniteSignal {
             subject.send(value)
         }
         
+        public mutating func debounce<S: Scheduler>(interval: Double, scheduler: S) -> Self {
+            self.debouncePublisher = subject.debounce(for: .seconds(interval), scheduler: scheduler)
+                .eraseToAnyPublisher()
+            
+            return self
+        }
+        
+        public mutating func throttle<S: Scheduler>(interval: Double, scheduler: S) -> Self {
+            self.throttlePublisher = subject.throttle(for: .seconds(interval), scheduler: scheduler, latest: true)
+                .eraseToAnyPublisher()
+            
+            return self
+        }
     }
 }
 

@@ -118,7 +118,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         case .service(.online):
             center.findStore()?.sync()
         case .component:
-            center.findStore()?.enable()
+            center.findStore()?.awake()
         default:
             break
         }

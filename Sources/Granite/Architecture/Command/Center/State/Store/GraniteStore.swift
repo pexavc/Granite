@@ -124,6 +124,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
      */
     func silence() {
         pausable?.state = .stopped
+        //TODO: revisit this logic.
+        //idea is to prevent a redraw, but observe load state
+        pausableLoaded?.state = .stopped
     }
     
     func awake() {

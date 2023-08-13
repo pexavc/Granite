@@ -73,13 +73,11 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     }
     
     func setup() {
-        
         bind()
         observe()
     }
     
     func bind() {
-        
         let events = self.findCompileableEvents()
         
         self.reducers = events.flatMap { $0.compile(self, properties: .init(isOnline: self.kind == .online)) }
@@ -136,7 +134,6 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         guard isDiscoverable else { return }
         
         self.lifecycle = .attached
-        
     }
     
     public func awake() {

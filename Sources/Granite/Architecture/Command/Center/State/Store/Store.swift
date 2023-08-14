@@ -87,6 +87,10 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.isSyncing
     }
     
+    var viewUpdatesSilenced: Bool {
+        container.silenceViewUpdates
+    }
+    
     /*
      TODO:
      - Add debounce function

@@ -13,6 +13,7 @@ import Foundation
  CoreData alternative.
 */
 final public class FilePersistence : AnyPersistence {
+    public let readWriteQueue: OperationQueue = .init()
     
     public static var initialValue: FilePersistence {
         .init(key: UUID().uuidString)
@@ -27,7 +28,8 @@ final public class FilePersistence : AnyPersistence {
     public required init(key: String) {
         self.key = key
         self.url = FilePersistence.Root.appendingPathComponent(key)
-        
+        self.readWriteQueue.underlyingQueue = .init(label: "granite.write.queue.\(key)", qos: .background)
+        self.readWriteQueue.maxConcurrentOperationCount = 1
         do {
             try FileManager.default.createDirectory(at: FilePersistence.Root,
                                                      withIntermediateDirectories: true,
@@ -41,24 +43,26 @@ final public class FilePersistence : AnyPersistence {
     public func save<State>(state: State) where State : Codable {
         let encoder = PropertyListEncoder()
         
-        
-        do {
-            let data = try encoder.encode(state)
-            
-            //If the service is online wrong saves can occur
-            //TODO: tmp files that pickle into the full file later?
-            let oldData = try? Data(contentsOf: url)
-            
-            guard data != oldData else {
-                return
+        self.readWriteQueue.addOperation { [weak self] in
+            do {
+                guard let self else { return }
+                let data = try encoder.encode(state)
+                
+                //If the service is online wrong saves can occur
+                //TODO: tmp files that pickle into the full file later?
+                let oldData = try? Data(contentsOf: self.url)
+                
+                guard data != oldData else {
+                    return
+                }
+                
+                GraniteLog(self.key, level: .info)
+                
+                try data.write(to: self.url)
             }
-            
-            GraniteLog(key, level: .info)
-            
-            try data.write(to: url)
-        }
-        catch let error {
-            GraniteLog("key: \(key) | error: \(error.localizedDescription)", level: .error)
+            catch let error {
+                GraniteLog("key: \(self?.key ?? "") | error: \(error.localizedDescription)", level: .error)
+            }
         }
     }
     

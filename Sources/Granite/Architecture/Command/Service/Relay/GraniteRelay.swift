@@ -27,7 +27,7 @@ public enum GraniteRelayKind {
  in Components and/or Reducers. When inside components changes
  will propogate view changes.
 */
-final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospectable, Findable, Director, SharableObject {
+final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospectable, Findable, Director, SharableObject, Nameable {
     public static var initialValue: GraniteRelay<Service> {
         .init()
     }
@@ -109,23 +109,26 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
          
          TODO: a slight retainment (~1mb can be observed, but the source may not be here
          */
+        
         store.syncSignal += { [weak self] (state, id) in
             guard store.id != id else {
-                //TODO: debounce?
-                if store.autoSave == true {
-                    store.save(state)
-                }
-
+//                //TODO: debounce?
+//                if store.autoSave == true {
+//                    store.save(state)
+//                }
+//
                 return
             }
             
             store.silence()
             self?.update(state)
-            DispatchQueue.main.async { [weak self] in
-                if self?.isSilenced == false {
-                    self?.objectWillChange.send()
-                } else {
-                    self?.pendingUpdates = true
+            if store.viewUpdatesSilenced == false {
+                DispatchQueue.main.async { [weak self] in
+                    if self?.isSilenced == false {
+                        self?.objectWillChange.send()
+                    } else {
+                        self?.pendingUpdates = true
+                    }
                 }
             }
             store.awake()

@@ -65,7 +65,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     
     fileprivate let storage : AnyPersistence
     
-    fileprivate var silenceViewUpdates: Bool = false
+    var silenceViewUpdates: Bool = false
     
     let autoSave : Bool
     
@@ -97,7 +97,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
                     Task.detached {
                         signal.send((state, id))
                     }
-                } else if self?.autoSave == true {
+                }
+                
+                if self?.autoSave == true {
                     self?.persistence.save(state)
                 }
         }
@@ -161,9 +163,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     }
     
     func restore() {
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            self?.persistence.restore()
-        }
+        self.persistence.restore()
     }
     
     deinit {

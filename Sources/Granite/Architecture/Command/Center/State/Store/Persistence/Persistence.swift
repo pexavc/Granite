@@ -12,6 +12,7 @@ import Foundation
  Base class for Persistence types.
 */
 public protocol AnyPersistence : AnyObject {
+    var readWriteQueue: OperationQueue { get }
     
     var key : String { get }
     
@@ -42,6 +43,7 @@ extension AnyPersistence {
  Mostly used for default inits
 */
 public class EmptyPersistence : AnyPersistence {
+    public let readWriteQueue: OperationQueue = .init()
     public var isRestoring: Bool = false
     
     public init() {}

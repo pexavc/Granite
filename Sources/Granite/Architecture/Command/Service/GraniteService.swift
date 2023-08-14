@@ -34,8 +34,8 @@ extension GraniteService {
         locate?.command.center.findStore()?.preload()
     }
     
-    public func silence() {
-        locate?.command.center.findStore()?.silence()
+    public func silence(viewUpdatesOnly updateView: Bool = false) {
+        locate?.command.center.findStore()?.silence(viewUpdatesOnly: updateView)
     }
 }
 

@@ -59,12 +59,12 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.didLoad
     }
     
-    func silence() {
-        container.silence()
+    func silence(viewUpdatesOnly updateView: Bool = false) {
+        container.silence(viewUpdatesOnly: updateView)
     }
     
-    func awake() {
-        container.awake()
+    func awake(viewUpdatesOnly updateView: Bool = false) {
+        container.awake(viewUpdatesOnly: updateView)
     }
     
     func preload() {

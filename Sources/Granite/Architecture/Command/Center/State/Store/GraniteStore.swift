@@ -64,6 +64,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     fileprivate var syncCancellable: AnyCancellable? = nil
     
     fileprivate let storage : AnyPersistence
+    
+    fileprivate var silenceViewUpdates: Bool = false
+    
     let autoSave : Bool
     
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
@@ -77,7 +80,10 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         pausable = $state
             .removeDuplicates()
             .pausableSink { [weak self] state in
-                self?.willChange.send(state)
+                
+                if self?.silenceViewUpdates == false {
+                    self?.willChange.send(state)
+                }
                 
                 let shouldSync = self?.isSyncing == true
                 let id = self?.id ?? .init()
@@ -87,6 +93,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
                     
                     GraniteLog("\(self?.NAME) syncing", level: .debug)
                     
+                    //TODO: this detachment needs too be revisited
                     Task.detached {
                         signal.send((state, id))
                     }
@@ -101,7 +108,11 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
             .pausableSink { [weak self] status in
                 if status, let state = self?.state {
                     self?.pausable?.state = .normal
-                    self?.willChange.send(state)
+                    
+                    if self?.silenceViewUpdates == false {
+                        self?.willChange.send(state)
+                    }
+                    
                     self?.didLoad.send()
                 }
         }
@@ -122,16 +133,22 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
      Extends container to allow calls from outside helps
      prevent multiple draw calls during state updates
      */
-    func silence() {
-        pausable?.state = .stopped
-        //TODO: revisit this logic.
-        //idea is to prevent a redraw, but observe load state
-        pausableLoaded?.state = .stopped
+    func silence(viewUpdatesOnly: Bool = false) {
+        if viewUpdatesOnly {
+            self.silenceViewUpdates = true
+        } else {
+            pausable?.state = .stopped
+        }
     }
     
-    func awake() {
-        pausable?.state = .normal
+    func awake(viewUpdatesOnly: Bool = false) {
+        if viewUpdatesOnly {
+            self.silenceViewUpdates = false
+        } else {
+            pausable?.state = .normal
+        }
     }
+    
     
     /*
      Force preload, which is async on the background thread

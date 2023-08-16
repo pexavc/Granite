@@ -54,6 +54,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     @Published internal var state : State
     @Published var isLoaded : Bool
     
+    var syncEnabled: Bool = false
     var isSyncing: Bool = false
     
     internal var cancellables = Set<AnyCancellable>()
@@ -62,6 +63,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     //TODO: remove?
     fileprivate var persistStateChangesCancellable : AnyCancellable? = nil
     fileprivate var syncCancellable: AnyCancellable? = nil
+    fileprivate var syncTask: Task<Void, Error>? = nil
     
     fileprivate let storage : AnyPersistence
     
@@ -80,28 +82,31 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         pausable = $state
             .removeDuplicates()
             .pausableSink { [weak self] state in
+            
+            if self?.silenceViewUpdates == false {
+                self?.willChange.send(state)
+            }
                 
-                if self?.silenceViewUpdates == false {
-                    self?.willChange.send(state)
+            guard self?.isSyncing == false else {
+                self?.isSyncing = false
+                return
+            }
+            
+            let shouldSync = self?.syncEnabled == true
+            let id = self?.id ?? .init()
+            
+            if let signal = self?.syncSignal,
+               shouldSync {
+                
+                //TODO: this detachment needs too be revisited
+                self?.syncTask = Task(priority: .userInitiated) {
+                    signal.send((state, id))
                 }
-                
-                let shouldSync = self?.isSyncing == true
-                let id = self?.id ?? .init()
-                
-                if let signal = self?.syncSignal,
-                   shouldSync {
-                    
-                    GraniteLog("\(self?.NAME) syncing", level: .debug)
-                    
-                    //TODO: this detachment needs too be revisited
-                    Task.detached {
-                        signal.send((state, id))
-                    }
-                }
-                
-                if self?.autoSave == true {
-                    self?.persistence.save(state)
-                }
+            }
+            
+            if self?.autoSave == true && self?.isSyncing == false {
+                self?.persistence.save(state)
+            }
         }
         pausable?.store(in: &cancellables)
         
@@ -120,6 +125,20 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         }
         pausableLoaded?.store(in: &cancellables)
         pausableLoaded?.state = .normal
+        
+        syncCancellable = syncSignal += { [weak self] (state, id) in
+            guard self?.syncEnabled == true,
+                  self?.id != id else {
+                return
+            }
+            
+            
+            
+            //self?.silence()
+            self?.isSyncing = true
+            self?.state = state
+            //self?.awake()
+        }
     }
     
     /*
@@ -128,7 +147,9 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
      all instance types, Components and Services currently
      */
     func sync(shutdown: Bool = false) {
-        isSyncing = shutdown == false
+        syncEnabled = shutdown == false
+        
+//        guard syncEnabled else { return }
     }
     
     /*
@@ -151,14 +172,16 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         }
     }
     
+    func prepareSync() {
+        self.isSyncing = true
+    }
+    
     
     /*
      Force preload, which is async on the background thread
      by default, affects Services mostly
      */
     func preload() {
-        self.pausable?.state = .normal
-        self.pausableLoaded?.state = .stopped
         persistence.forceRestore()
     }
     
@@ -172,6 +195,8 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
 //            self.persistence.save()
 //        }
 //        Prospector.shared.node(for: id)?.remove(includeChildren: false)
+        self.syncTask?.cancel()
+        self.syncTask = nil
         
         syncCancellable?.cancel()
         syncCancellable = nil

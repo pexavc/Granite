@@ -110,29 +110,27 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
          TODO: a slight retainment (~1mb can be observed, but the source may not be here
          */
         
-        store.syncSignal += { [weak self] (state, id) in
-            guard store.id != id else {
-//                //TODO: debounce?
-//                if store.autoSave == true {
-//                    store.save(state)
+//        if store.syncEnabled {
+//            store.syncSignal += { [weak self] (state, id) in
+//                guard store.id != id else {
+//                    return
 //                }
-//
-                return
-            }
-            
-            store.silence()
-            self?.update(state)
-            if store.viewUpdatesSilenced == false {
-                DispatchQueue.main.async { [weak self] in
-                    if self?.isSilenced == false {
-                        self?.objectWillChange.send()
-                    } else {
-                        self?.pendingUpdates = true
-                    }
-                }
-            }
-            store.awake()
-        }
+//                
+////                store.silence()
+//                store.prepareSync()
+//                self?.update(state)
+////                if store.viewUpdatesSilenced == false {
+////                    DispatchQueue.main.async { [weak self] in
+////                        if self?.isSilenced == false {
+////                            self?.objectWillChange.send()
+////                        } else {
+////                            self?.pendingUpdates = true
+////                        }
+////                    }
+////                }
+////                store.awake()
+//            }
+//        }
         
         guard isDiscoverable else { return }
         

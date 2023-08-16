@@ -33,12 +33,10 @@ public struct StatePersistence<State : Codable> {
     }
     
     public func restore() {
-        storage.readWriteQueue.addOperation {
+        storage.readWriteQueue?.addBarrierBlock {
             if let state : State = storage.restore() {
-                DispatchQueue.main.async {
-                    setState(state)
-                    isLoaded(true)
-                }
+                setState(state)
+                isLoaded(true)
             } else {
                 save()
             }
@@ -46,13 +44,13 @@ public struct StatePersistence<State : Codable> {
     }
     
     public func forceRestore() {
-        storage.readWriteQueue.cancelAllOperations()
-        if let state : State = storage.restore() {
-            setState(state)
-            isLoaded(true)
-        } else {
-            save()
-        }
+        storage.readWriteQueue?.waitUntilAllOperationsAreFinished()
+//        if let state : State = storage.restore() {
+//            setState(state)
+//            isLoaded(true)
+//        } else {
+//            save()
+//        }
     }
     
     public func purge() {

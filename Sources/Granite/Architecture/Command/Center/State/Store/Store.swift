@@ -79,8 +79,16 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.sync(shutdown: shutdown)
     }
     
+    func prepareSync() {
+        container.prepareSync()
+    }
+    
     var syncSignal: GraniteSignal.Payload<(State, UUID)> {
         container.syncSignal
+    }
+    
+    var syncEnabled: Bool {
+        container.syncEnabled
     }
     
     var isSyncing: Bool {
@@ -108,10 +116,11 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         last state
         */
         guard autoSave else { return }
+        
+        container.restore()
+        
         if preload {
             self.preload()
-        } else {
-            container.restore()
         }
     }
 }

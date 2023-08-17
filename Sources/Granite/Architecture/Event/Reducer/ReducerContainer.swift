@@ -182,15 +182,10 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         }
         
         //TODO: this CAN be a queue, before it hits an after
-        // a basic CS problem
         
         if let newState = self.reducer?.execute(coordinator?.getState()) {
             updateState(newState)
         }
-        
-//        self.reducer?.findRelays().forEach { relay in
-//            relay.detach()
-//        }
         
         for signal in (sideEffects[.after] ?? []){
             signal.send(reducer?.payload as? GranitePayload)
@@ -219,31 +214,18 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
     }
     
     func updateState(_ newState: AnyGraniteState) {
-        if Thread.isMainThread {
-            coordinator?.setState(newState)
-            
-            thread.async { [weak self] in
-                //TODO: same as above
-                if let reducerType = self?.reducer?.reducerType {
-                    self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
-                }
-            }
-        } else {
-            //TODO: still haven't proven robustness of this rudimentary threading impl.
-            DispatchQueue.main.async { [weak self] in
-                self?.coordinator?.setState(newState)
-                //self?.coordinator?.persistStateChanges()
-                
-                //TODO: need to allow an option for sync signal to not fire
-                //from the reducer itself. allowing a chain of @Event(.afters)
-                //to execute until the one's whose final state matters and then
-                //can thus, broadcast to peers
-                
-                self?.thread.async {
-                    if let reducerType = self?.reducer?.reducerType {
-                        self?.coordinator?.notify(reducerType, payload: self?.reducer?.payload)
-                    }
-                }
+        self.coordinator?.setState(newState)
+        //self?.coordinator?.persistStateChanges()
+        
+        //TODO: need to allow an option for sync signal to not fire
+        //from the reducer itself. allowing a chain of @Event(.afters)
+        //to execute until the one's whose final state matters and then
+        //can thus, broadcast to peers
+        
+        self.thread.async {
+            if let reducerType = self.reducer?.reducerType {
+                self.coordinator?.notify(reducerType,
+                                         payload: self.reducer?.payload)
             }
         }
     }

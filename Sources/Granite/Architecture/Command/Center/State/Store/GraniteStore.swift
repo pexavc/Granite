@@ -82,7 +82,6 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         pausable = $state
             .removeDuplicates()
             .pausableSink { [weak self] state in
-            
             if self?.silenceViewUpdates == false {
                 self?.willChange.send(state)
             }

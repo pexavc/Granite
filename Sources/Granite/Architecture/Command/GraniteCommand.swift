@@ -167,7 +167,9 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         guard case .component = kind else { return }
         
         changeSignal += { [weak self] _ in
-            self?.objectWillChange.send()
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+            }
         }
         
         //Observed here, signal sent by Component+View

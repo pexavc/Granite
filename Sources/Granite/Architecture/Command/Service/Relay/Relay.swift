@@ -57,6 +57,13 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
         self.isDiscoverable = isDiscoverable
         //relay.update(behavior: behavior)
         self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
+        
+        switch behavior {
+        case .silence:
+            relay.silence()
+        default:
+            break
+        }
     }
     
     public func awake() {
@@ -70,5 +77,6 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
 
 public enum GraniteRelayBehavior {
     case normal
+    case silence
     case detach
 }

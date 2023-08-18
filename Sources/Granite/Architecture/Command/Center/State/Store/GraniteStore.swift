@@ -131,7 +131,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
                 return
             }
             
-            
+            //GraniteLog("syncing: \(self?.NAME)", level: .debug)
             
             //self?.silence()
             self?.isSyncing = true

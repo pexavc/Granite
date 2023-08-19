@@ -37,16 +37,16 @@ extension View {
     }
     
     public func routeTarget<C: View>(_ condition: Binding<Bool>,
-                                 title: String = "",
-                                 style: GraniteNavigationWindowStyle = .default,
-                                 @ViewBuilder component : @escaping (() -> C)) -> some View {
-        let modifier = NavigationRouteViewModifier<C>(isTargetActive: condition, useTarget: true, title: title, style: style, component: component)
+                                     title: String = "",
+                                     window: GraniteRouteWindowProperties = .resizable(size: GraniteNavigationWindowStyle.defaultSize),
+                                     @ViewBuilder component : @escaping (() -> C)) -> some View {
+        let modifier = NavigationRouteViewModifier<C>(isTargetActive: condition, useTarget: true, title: title, style: window.style, component: component)
         
         return self.modifier(modifier)
     }
     
     public func route<C: View>(title: String = "",
-                               window: GraniteRoute<AnyView>.WindowProperties = .init(),
+                               window: GraniteRouteWindowProperties = .init(),
                                @ViewBuilder component : @escaping (() -> C)) -> some View {
         let modifier = NavigationRouteViewModifier<C>(title: title, style: window.style, component: component)
         
@@ -56,19 +56,19 @@ extension View {
 
 //MARK: Component
 public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payload: GranitePayload>: ViewModifier {
-    #if os(iOS)
+#if os(iOS)
     private func graniteHapticFeedbackDefaultSuccess() {
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(.success)
     }
-
+    
     private func graniteHapticFeedbackImpact(style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.prepare()
         generator.impactOccurred()
     }
-    #endif
+#endif
     //    var routePayload: RoutePayload<Payload>
     @State var isActive: Bool = false
     @State fileprivate var screen: NavigationPassthroughComponent<Component, Payload>.Screen<Component, Payload>
@@ -87,11 +87,11 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
     }
     
     public func body(content: Content) -> some View {
-        #if os(iOS)
+#if os(iOS)
         NavigationLink(isActive: $isActive) {
             if isActive {
                 NavigationPassthroughComponent(isActive: $isActive,
-                                      screen: screen)
+                                               screen: screen)
             } else {
                 EmptyView()
                     .onAppear {
@@ -106,12 +106,12 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
                 }
         }
         .isDetailLink(false)//TODO: should be customizable
-        #else
+#else
         
         NavigationLink(isActive: $isActive) {
             if isActive {
                 NavigationPassthroughComponent(isActive: $isActive,
-                                      screen: screen)
+                                               screen: screen)
             } else {
                 EmptyView()
                     .onAppear {
@@ -128,25 +128,25 @@ public struct NavigationRouteComponentModifier<Component: GraniteComponent, Payl
                     }
                 }
         }
-        #endif
+#endif
     }
 }
 
 //MARK: View
 public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
-    #if os(iOS)
+#if os(iOS)
     private func graniteHapticFeedbackDefaultSuccess() {
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(.success)
     }
-
+    
     private func graniteHapticFeedbackImpact(style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.prepare()
         generator.impactOccurred()
     }
-    #endif
+#endif
     //    var routePayload: RoutePayload<Payload>
     @Binding var isTargetActive: Bool
     @State var isActive: Bool = false
@@ -170,7 +170,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
     }
     
     public func body(content: Content) -> some View {
-        #if os(iOS)
+#if os(iOS)
         if useTarget {
             NavigationLink(isActive: $isTargetActive) {
                 NavigationPassthroughView(isActive: $isTargetActive,
@@ -200,7 +200,7 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
             .isDetailLink(false)//TODO: should be customizable
         }
         
-        #else
+#else
         if useTarget {
             content
                 .onChange(of: isTargetActive) { value in
@@ -222,35 +222,36 @@ public struct NavigationRouteViewModifier<Component: View>: ViewModifier {
                     }
                 }
         }
-        #endif
+#endif
+    }
+}
+
+public struct GraniteRouteWindowProperties {
+    public let title: String
+    public let style: GraniteNavigationWindowStyle
+    
+    public init(title: String = "", style: GraniteNavigationWindowStyle = .default) {
+        self.title = title
+        self.style = style
+    }
+    
+    public static func resizable(size: CGSize) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: size, styleMask: .resizable))
+    }
+    
+    public static func resizable(_ width: CGFloat, _ height: CGFloat) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: .init(width: width, height: height), styleMask: .resizable))
     }
 }
 
 public struct GraniteRoute<Component: View>: View {
-    public struct WindowProperties {
-        public let title: String
-        public let style: GraniteNavigationWindowStyle
-        
-        public init(title: String = "", style: GraniteNavigationWindowStyle = .default) {
-            self.title = title
-            self.style = style
-        }
-        
-        public static func resizable(size: CGSize) -> WindowProperties {
-            return .init(style: .init(size: size, styleMask: .resizable))
-        }
-        
-        public static func resizable(_ width: CGFloat, _ height: CGFloat) -> WindowProperties {
-            return .init(style: .init(size: .init(width: width, height: height), styleMask: .resizable))
-        }
-    }
     
     
     @Binding var isActive: Bool
     @State fileprivate var screen: NavigationPassthroughView<Component>.Screen<Component>
-    let window: WindowProperties
+    let window: GraniteRouteWindowProperties
     public init(_ condition: Binding<Bool>,
-                window: WindowProperties = .init(),
+                window: GraniteRouteWindowProperties = .init(),
                 @ViewBuilder component: @escaping (() -> Component)){
         self._isActive = condition
         self._screen = .init(initialValue: .init(component))
@@ -258,9 +259,9 @@ public struct GraniteRoute<Component: View>: View {
     }
     
     public var body: some View {
-        #if os(iOS)
+#if os(iOS)
         Button {
-        
+            
         } label : {
             NavigationLink(isActive: $isActive) {
                 NavigationPassthroughView(isActive: $isActive,
@@ -275,16 +276,16 @@ public struct GraniteRoute<Component: View>: View {
             }
             .isDetailLink(false)
         }.buttonStyle(.plain)
-        #else
+#else
         EmptyView()
-        .onChange(of: isActive) { value in
-            guard value else { return }
-            GraniteNavigationWindow.shared.addWindow(title: window.title, style: window.style) {
-                NavigationPassthroughView(isActive: $isActive,
-                                          screen: screen)
+            .onChange(of: isActive) { value in
+                guard value else { return }
+                GraniteNavigationWindow.shared.addWindow(title: window.title, style: window.style) {
+                    NavigationPassthroughView(isActive: $isActive,
+                                              screen: screen)
+                }
+                isActive = false
             }
-            isActive = false
-        }
-        #endif
+#endif
     }
 }

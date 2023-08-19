@@ -217,11 +217,6 @@ class ReducerContainer<Event : EventExecutable>: AnyReducerContainer, Prospectab
         self.coordinator?.setState(newState)
         //self?.coordinator?.persistStateChanges()
         
-        //TODO: need to allow an option for sync signal to not fire
-        //from the reducer itself. allowing a chain of @Event(.afters)
-        //to execute until the one's whose final state matters and then
-        //can thus, broadcast to peers
-        
         self.thread.async {
             if let reducerType = self.reducer?.reducerType {
                 self.coordinator?.notify(reducerType,

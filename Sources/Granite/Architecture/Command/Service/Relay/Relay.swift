@@ -78,5 +78,6 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
 public enum GraniteRelayBehavior {
     case normal
     case silence
+    case silenceViewUpdates
     case detach
 }

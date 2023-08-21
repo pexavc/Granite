@@ -43,11 +43,15 @@ import Combine
 public class GraniteNavigationWindow {
     public static var shared: GraniteNavigationWindow = .init()
     
-    fileprivate var windows: [String:GraniteWindow] = [:]
+    fileprivate var windows: [String : GraniteWindow] = [:]
     fileprivate var count: Int = 0
+    
+    fileprivate var mainWindowId: String? = nil
     
     public static var defaultSize: CGSize = GraniteNavigationWindowStyle.defaultSize
     public static var backgroundColor: NSColor = .clear
+    
+    public static var defaultMainWindowId: String = "granite.app.window.main"
     
     public func addWindow<Content: View>(id: String? = nil,
                                          title: String,
@@ -66,8 +70,19 @@ public class GraniteNavigationWindow {
                 .padding(.top, titlebarAware ? (self?.windows[windowId]?.titleBarHeight ?? NSWindow.defaultTitleBarHeight) : 0)
         }
         
+        if isMain {
+            mainWindowId = windowId
+        }
         
         self.count = self.windows.keys.count
+    }
+    
+    public var mainWindow: GraniteWindow? {
+        guard let mainWindowId else {
+            return nil
+        }
+        
+        return windows[mainWindowId]
     }
     
     public func updateWidth(_ value: CGFloat, id: String) {
@@ -109,10 +124,8 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
     
     private var isVisible: Bool = false
     
-    let pubClickedOutside = NotificationCenter.default
-        .publisher(for: NSNotification.Name("nyc.stoic.Bullish.ClickedOutside"))
-    let pubClickedInside = NotificationCenter.default
-        .publisher(for: NSNotification.Name("nyc.stoic.Bullish.ClickedInside"))
+    let pubClickedOutside = Granite.App.Interaction.windowClickedOutside.publisher
+    let pubClickedInside = Granite.App.Interaction.windowClickedInside.publisher
     
     internal var cancellables = Set<AnyCancellable>()
     
@@ -244,8 +257,23 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
 }
 
 public extension NSWindow {
-    func graniteStyle(title: String? = nil, styleMask: NSWindow.StyleMask? = nil, compact: Bool = false) {
-        var windowStyleMask: NSWindow.StyleMask = [.fullSizeContentView, .titled, .closable]
+    func graniteStyle(title: String? = nil,
+                      styleMask: NSWindow.StyleMask? = nil,
+                      isClosabe: Bool = true,
+                      compact: Bool = false,
+                      isChildWindow: Bool = false) {
+        
+        var windowStyleMask: NSWindow.StyleMask
+        
+        if isChildWindow {
+            windowStyleMask = []
+        } else {
+            windowStyleMask = [.fullSizeContentView, .titled]
+        }
+        
+        if isClosabe {
+            windowStyleMask.formUnion(.closable)
+        }
         
         if let mask = styleMask {
             windowStyleMask.formUnion(mask)
@@ -260,7 +288,7 @@ public extension NSWindow {
         //        level = .floating
         backgroundColor = .clear
         
-        standardWindowButton(.closeButton)?.isHidden = false// compact == true
+        standardWindowButton(.closeButton)?.isHidden = isClosabe == false// compact == true
         standardWindowButton(.miniaturizeButton)?.isHidden = true
         standardWindowButton(.zoomButton)?.isHidden = true
         
@@ -272,19 +300,34 @@ public extension NSWindow {
     }
 }
 
-class AppWindow: NSWindow {
+public class AppWindow: NSWindow {
     
     private var lastPoint: CGPoint? = nil
     
-    init(_ size: CGSize,
-         title: String? = nil,
-         center: Bool = false,
-         styleMask: NSWindow.StyleMask? = nil,
-         compact: Bool = false) {
+    public init(_ size: CGSize = GraniteNavigationWindow.defaultSize,
+                title: String? = nil,
+                center: Bool = false,
+                styleMask: NSWindow.StyleMask? = nil,
+                isClosabe: Bool = true,
+                compact: Bool = false,
+                isChildWindow: Bool = false) {
         
-        let origin = AppWindow.originPoint(size, newSize: .zero, center: center)
+        let origin: CGPoint
         
-        var windowStyleMask: NSWindow.StyleMask = [.fullSizeContentView, .titled, .closable]
+        var windowStyleMask: NSWindow.StyleMask
+        
+        if isChildWindow {
+            windowStyleMask = []
+            origin = .zero
+        } else {
+            windowStyleMask = [.fullSizeContentView, .titled]
+            origin = AppWindow.originPoint(size, newSize: .zero, center: center)
+        }
+        
+        
+        if isClosabe {
+            windowStyleMask.formUnion(.closable)
+        }
         
         if let mask = styleMask {
             windowStyleMask.formUnion(mask)
@@ -296,8 +339,27 @@ class AppWindow: NSWindow {
                    defer: false)
         
         self.lastPoint = origin
-        self.graniteStyle(title: title, styleMask: styleMask, compact: compact)
+        self.graniteStyle(title: title,
+                          styleMask: styleMask,
+                          isClosabe: isClosabe,
+                          compact: compact,
+                          isChildWindow: isChildWindow)
         //        titleVisibility = .hidden
+    }
+    
+    public func setOrigin(_ origin: CGPoint) {
+        let size = self.frame.size
+        self.setFrame(.init(origin: origin,
+                            size: size),
+                      display: true)
+    }
+    
+    public func setCenter(_ center: CGPoint) {
+        let size = self.frame.size
+        self.setFrame(.init(origin: .init(x: center.x - (size.width / 2),
+                                          y: center.y - (size.height / 2)),
+                            size: size),
+                      display: true)
     }
     
     static func originPoint(_ size: CGSize, newSize: CGSize, titleBarHeight: CGFloat = 28, currentMidPoint: CGPoint? = nil, center: Bool = false) -> CGPoint {
@@ -363,7 +425,7 @@ class AppWindow: NSWindow {
 }
 
 extension NSWindow {
-    var titlebarHeight: CGFloat {
+    public var titlebarHeight: CGFloat {
         frame.height - contentLayoutRect.height
     }
     

@@ -28,34 +28,41 @@ struct GraniteNavigationView<Content: View>: View {
     }
     
     var body: some View {
+        #if os(iOS)
         NavigationView {
-            ZStack(alignment: .top) {
-                
-                style.backgroundColor
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-                
-                #if os(iOS)
-                content()
-                    .background(style.backgroundColor)
-                    .navigationViewStyle(.stack)
-                    .onDisappear {
-                        GraniteLog("releasing: \(routes.id)", level: .debug)
-                        routes.releaseStack()
-                    }
-                #else
-                content()
-                    .background(style.backgroundColor)
-                #endif
-                
-                GraniteRouter()
-                    .environmentObject(routes)
-            }
-            .environment(\.graniteNavigationRouterKey, routes.id)
-            .navBarTitle()
-            .navBarHidden()
+            mainView
         }
+        #else
+        mainView
+        #endif
+    }
+    var mainView: some View {
+        ZStack(alignment: .top) {
+            
+            style.backgroundColor
+                .ignoresSafeArea()
+                .frame(maxWidth: .infinity,
+                       maxHeight: .infinity)
+            
+            #if os(iOS)
+            content()
+                .background(style.backgroundColor)
+                .navStack()
+                .onDisappear {
+                    GraniteLog("releasing: \(routes.id)", level: .debug)
+                    routes.releaseStack()
+                }
+            #else
+            content()
+                .background(style.backgroundColor)
+            #endif
+            
+            GraniteRouter()
+                .environmentObject(routes)
+        }
+        .environment(\.graniteNavigationRouterKey, routes.id)
+        .navBarTitle()
+        .navBarHidden()
     }
 }
 
@@ -71,6 +78,14 @@ fileprivate extension View {
     func navBarHidden() -> some View {
         #if os(iOS)
         self.navigationBarHidden(true)
+        #else
+        self
+        #endif
+    }
+    
+    func navStack() -> some View {
+        #if os(iOS)
+        self.navigationViewStyle(.stack)
         #else
         self
         #endif

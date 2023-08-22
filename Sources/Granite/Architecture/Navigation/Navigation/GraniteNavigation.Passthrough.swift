@@ -55,9 +55,6 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             self.screen = nil
         }
     }
-#if os(iOS)
-    let generator = UIImpactFeedbackGenerator(style: .light)
-#endif
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.graniteNavigationRouterKey) var routerKey: String
@@ -80,7 +77,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     }
     
     func dismiss() {
-        generator.impactOccurred()
+        #if os(iOS)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
         GraniteNavigation.router(for: routerKey).pop()
         self.screen.clean()
         self.loaded = false
@@ -124,32 +123,14 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     public var body: some View {
 #if os(iOS)
         Group {
+            #if os(iOS)
             SlideView($isShowing,
                       loaded: $loaded) {
-                ZStack {
-                    
-                    if loaded,
-                       let screen = screen.screen {
-                        VStack(spacing: 0) {
-                            navBar
-                            screen
-                        }
-                    }
-                    
-                    if loaded == false {
-                        VStack {
-                            Spacer()
-#if os(iOS)
-                            ProgressView()
-#else
-                            ProgressView()
-                                .scaleEffect(0.6)
-#endif
-                            Spacer()
-                        }
-                    }
-                }
+                mainView
             }
+            #else
+            mainView
+            #endif
         }
         .onDisappear {
             self.screen.clean()
@@ -170,6 +151,32 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
 #else
         ZStack {}
 #endif
+    }
+    
+    public var mainView: some View {
+        ZStack {
+            
+            if loaded,
+               let screen = screen.screen {
+                VStack(spacing: 0) {
+                    navBar
+                    screen
+                }
+            }
+            
+            if loaded == false {
+                VStack {
+                    Spacer()
+#if os(iOS)
+                    ProgressView()
+#else
+                    ProgressView()
+                        .scaleEffect(0.6)
+#endif
+                    Spacer()
+                }
+            }
+        }
     }
 }
 
@@ -270,7 +277,7 @@ struct SlideView<MenuContent: View>: View {
 #if os(iOS)
         let viewingWidth: CGFloat = UIScreen.main.bounds.width * viewingThreshold
 #else
-        let viewingWidth: CGFloat = ContainerConfig.iPhoneScreenWidth
+        let viewingWidth: CGFloat = 350
 #endif
         self._offsetX = .init(initialValue: viewingWidth)
         self.width = viewingWidth

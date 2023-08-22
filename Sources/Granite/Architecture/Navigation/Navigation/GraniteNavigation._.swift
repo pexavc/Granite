@@ -84,6 +84,7 @@ public final class GraniteNavigation: ObservableObject {
     @discardableResult
     func set<Component : GraniteComponent>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
                                            @ViewBuilder _ component: @escaping (() -> Component)) -> String {
+        
         let screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
         let addr = NSString(format: "%p", addressHeap(o: screen)) as String
         
@@ -95,7 +96,8 @@ public final class GraniteNavigation: ObservableObject {
         return addr
     }
     
-    func push(_ addr: String) {
+    func push(_ addr: String,
+              window: GraniteRouteWindowProperties = .init()) {
         
         isActive[addr] = true
         stack.append(addr)
@@ -104,7 +106,6 @@ public final class GraniteNavigation: ObservableObject {
         if let path = paths[addr] {
             GraniteNavigationWindow.shared.addWindow(title: window.title, style: window.style) {
                 path
-                    .environment(\.graniteNavigationPassKey, isActive[addr])
             }
         }
         #else

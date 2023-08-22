@@ -73,7 +73,9 @@ extension View {
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            GraniteNavigation.router(for: component.routerKey).push(memadd)
+            GraniteNavigation
+                .router(for: component.routerKey)
+                .push(memadd, window: window)
         } label: {
             self
         }
@@ -85,7 +87,9 @@ extension View {
         
         let component = NavigationComponent<C>(component)
         
-        let memadd = GraniteNavigation.router(for: component.routerKey).set(destinationStyle: component.destinationStyle) {
+        let memadd = GraniteNavigation
+            .router(for: component.routerKey)
+            .set(destinationStyle: component.destinationStyle) {
             component
         }
         
@@ -93,7 +97,9 @@ extension View {
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            GraniteNavigation.router(for: component.routerKey).push(memadd)
+            GraniteNavigation
+                .router(for: component.routerKey)
+                .push(memadd, window: window)
         } label: {
             self
         }
@@ -114,7 +120,9 @@ extension View {
                 #if os(iOS)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 #endif
-                GraniteNavigation.router(for: component.routerKey).push(memadd)
+                GraniteNavigation
+                    .router(for: component.routerKey)
+                    .push(memadd, window: window)
             }
     }
     
@@ -133,7 +141,9 @@ extension View {
                 #if os(iOS)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 #endif
-                GraniteNavigation.router(for: component.routerKey).push(memadd)
+                GraniteNavigation
+                    .router(for: component.routerKey)
+                    .push(memadd, window: window)
             }
     }
     
@@ -167,6 +177,7 @@ extension View {
 public extension GraniteNavigation {
     @MainActor
     static func push<Component: View>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
+                                      window: GraniteRouteWindowProperties = .init(),
                                       @ViewBuilder _ component: @escaping (() -> Component)) {
         
         let component = NavigationComponent<Component>(component)
@@ -175,11 +186,12 @@ public extension GraniteNavigation {
             component
         }
         
-        GraniteNavigation.router(for: component.routerKey).push(memadd)
+        GraniteNavigation.router(for: component.routerKey).push(memadd, window: window)
     }
     
     @MainActor
-    static func push<Component: GraniteNavigationDestination>(@ViewBuilder _ component: @escaping (() -> Component)) {
+    static func push<Component: GraniteNavigationDestination>(window: GraniteRouteWindowProperties = .init(),
+                                                              @ViewBuilder _ component: @escaping (() -> Component)) {
         
         let component = NavigationComponent<Component>(component)
         
@@ -187,6 +199,8 @@ public extension GraniteNavigation {
             component
         }
         
-        GraniteNavigation.router(for: component.routerKey).push(memadd)
+        GraniteNavigation
+            .router(for: component.routerKey)
+            .push(memadd, window: window)
     }
 }

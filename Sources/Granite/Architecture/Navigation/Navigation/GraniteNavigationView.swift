@@ -53,8 +53,26 @@ struct GraniteNavigationView<Content: View>: View {
                     .environmentObject(routes)
             }
             .environment(\.graniteNavigationRouterKey, routes.id)
-            .navigationBarTitle("", displayMode: .inline)
-            .navigationBarHidden(true)
+            .navBarTitle()
+            .navBarHidden()
         }
+    }
+}
+
+fileprivate extension View {
+    func navBarTitle() -> some View {
+        #if os(iOS)
+        self.navigationBarTitle("", displayMode: .inline)
+        #else
+        self
+        #endif
+    }
+    
+    func navBarHidden() -> some View {
+        #if os(iOS)
+        self.navigationBarHidden(true)
+        #else
+        self
+        #endif
     }
 }

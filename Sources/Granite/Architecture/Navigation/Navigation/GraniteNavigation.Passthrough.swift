@@ -67,6 +67,10 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     fileprivate var screen: Screen<Component, Payload>
     @State var loaded: Bool = false
     
+    //Simulate slide in nav stack anim
+    //should be customizable via destination style
+    @State var isShowing: Bool = false
+    
     init(screen: Screen<Component, Payload>) {
         self.screen = screen
     }
@@ -75,10 +79,16 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         self.screen.style ?? destinationStyle
     }
     
+    func dismiss() {
+        generator.impactOccurred()
+        GraniteNavigation.router(for: routerKey).pop()
+        self.screen.clean()
+        self.loaded = false
+    }
+    
     var leadingItem: some View {
         Button(action: {
-            generator.impactOccurred()
-            GraniteNavigation.router(for: routerKey).pop()
+            dismiss()
         }) {
             switch style.leadingButtonKind {
             case .customSystem, .back, .close:
@@ -108,36 +118,35 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         }
         .frame(height: style.barStyle.height)
         .padding(style.barStyle.edges)
+        .background(style.backgroundColor)
     }
     
     public var body: some View {
 #if os(iOS)
         Group {
-            ZStack {
-                style.backgroundColor
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-                
-                if loaded,
-                   let screen = screen.screen {
-                    VStack(spacing: 0) {
-                        navBar
-                        screen
-                            //.graniteNavigation()
+            SlideView($isShowing,
+                      loaded: $loaded) {
+                ZStack {
+                    
+                    if loaded,
+                       let screen = screen.screen {
+                        VStack(spacing: 0) {
+                            navBar
+                            screen
+                        }
                     }
-                }
-                
-                if loaded == false {
-                    VStack {
-                        Spacer()
+                    
+                    if loaded == false {
+                        VStack {
+                            Spacer()
 #if os(iOS)
-                        ProgressView()
+                            ProgressView()
 #else
-                        ProgressView()
-                            .scaleEffect(0.6)
+                            ProgressView()
+                                .scaleEffect(0.6)
 #endif
-                        Spacer()
+                            Spacer()
+                        }
                     }
                 }
             }
@@ -152,6 +161,11 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                 loaded = true
                 GraniteLog("Navigation Stack Window loaded, isPresented: \(presentationMode.wrappedValue.isPresented)", level: .debug)
             }
+        }
+        .onChange(of: isShowing) { state in
+            guard !state else { return }
+            GraniteLog("Navigated view dismissed via sliding")
+            dismiss()
         }
         #else
         ZStack {}
@@ -197,3 +211,97 @@ extension UINavigationController: UIGestureRecognizerDelegate {
     }
 }
 #endif
+
+//Slide in /swipe
+struct SlideView<MenuContent: View>: View {
+    @Environment(\.graniteNavigationStyle) var style
+    
+    @Binding var isShowing: Bool
+    @Binding var loaded: Bool
+    
+    var startThreshold: CGFloat = 0.05
+    var activeThreshold: CGFloat = 0.6
+    var viewingThreshold: CGFloat = 1
+    
+    var startWidth: CGFloat
+    var width: CGFloat
+    
+    @State var offsetX: CGFloat = 0
+    
+    var opacity: CGFloat {
+        (offsetX / width) * 0.8
+    }
+    
+    private let menuContent: () -> MenuContent
+    
+    init(_ isShowing: Binding<Bool>,
+                loaded: Binding<Bool>,
+                @ViewBuilder _ menuContent: @escaping () -> MenuContent) {
+        _isShowing = isShowing
+        _loaded = loaded
+        #if os(iOS)
+        let viewingWidth: CGFloat = UIScreen.main.bounds.width * viewingThreshold
+        #else
+        let viewingWidth: CGFloat = ContainerConfig.iPhoneScreenWidth
+        #endif
+        self._offsetX = .init(initialValue: viewingWidth)
+        self.width = viewingWidth
+        self.startWidth = viewingWidth * startThreshold
+        self.menuContent = menuContent
+    }
+    
+    var body: some View {
+        let drag = DragGesture()
+            .onChanged { value in
+                guard abs(value.translation.width) >= startWidth else {
+                    return
+                }
+                DispatchQueue.main.async {
+                    
+                    //isShowing = 0
+                    
+                    //!isShowing = width
+                    
+                    let translation = (value.translation.width - (startWidth * (isShowing ? 1 : -1))) + (isShowing ? 0 : width)
+                    self.offsetX = max(0, min(translation, width))
+                }
+            }
+            .onEnded { event in
+                DispatchQueue.main.async {
+                    if offsetX > activeThreshold * width {
+                        withAnimation {
+                            self.isShowing = false
+                            self.offsetX = width
+                        }
+                    } else{
+                        
+                        withAnimation {
+                            self.isShowing = true
+                            self.offsetX = 0
+                        }
+                    }
+                }
+        }
+        
+        return ZStack(alignment: .leading) {
+            style.backgroundColor
+                .ignoresSafeArea()
+                .frame(maxWidth: .infinity,
+                       maxHeight: .infinity)
+                .opacity(1.0 - (self.offsetX / width))
+            
+            menuContent()
+                .offset(x: self.offsetX)
+        }
+        .simultaneousGesture(drag)
+        .onChange(of: loaded) { state in
+            guard state else { return }
+            
+            withAnimation {
+                self.isShowing = true
+                self.offsetX = 0
+            }
+        }
+            
+    }
+}

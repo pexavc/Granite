@@ -117,11 +117,18 @@ extension EnvironmentValues {
 public struct GraniteNavigationDestinationStyle {
     var trailingItem: AnyView
     var fullWidth: Bool
+    var animation: TransitionAnimation
     
     public init<Content: View>(fullWidth: Bool = false,
+                               animation: TransitionAnimation = .slide,
                                @ViewBuilder _ content: () -> Content = { EmptyView() }) {
         self.fullWidth = fullWidth
+        self.animation = animation
         self.trailingItem = AnyView(content())
+    }
+    
+    public enum TransitionAnimation {
+        case slide
     }
 }
 
@@ -137,20 +144,29 @@ public extension EnvironmentValues {
 }
 
 public extension View {
-    func graniteDestinationTrailingView<Content: View>(fullWidth: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
+    func graniteDestinationTrailingView<Content: View>(fullWidth: Bool = false,
+                                                       animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
+                                                       @ViewBuilder _ content: () -> Content) -> some View {
         
         self
             .environment(\.graniteNavigationDestinationStyle,
-                          .init(fullWidth: fullWidth, content))
+                          .init(fullWidth: fullWidth,
+                                animation: animation,
+                                content))
     }
     
-    func graniteDestinationTrailingViewIf<Content: View>(_ condition: Bool, fullWidth: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
+    func graniteDestinationTrailingViewIf<Content: View>(_ condition: Bool,
+                                                         fullWidth: Bool = false,
+                                                         animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
+                                                         @ViewBuilder _ content: () -> Content) -> some View {
         
         Group {
             if condition {
                 self
                     .environment(\.graniteNavigationDestinationStyle,
-                                  .init(fullWidth: fullWidth, content))
+                                  .init(fullWidth: fullWidth,
+                                        animation: animation,
+                                        content))
             } else {
                 self
             }

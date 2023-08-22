@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftUI
-import GraniteUI
 #if os(iOS)
 import UIKit
 #endif
@@ -63,6 +62,7 @@ struct GraniteRouter: View {
 }
 
 extension View {
+    
     public func routeButton<C: View>(title: String = "",
                                      window: GraniteRouteWindowProperties = .init(),
                                      @ViewBuilder component : @escaping (() -> C)) -> some View {
@@ -74,7 +74,10 @@ extension View {
         }
         
         return Button {
-            GraniteHaptic.light.invoke()
+            //TODO: reusable.
+            #if os(iOS)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
             GraniteNavigation.router(for: component.routerKey).push(memadd)
         } label: {
             self
@@ -92,7 +95,9 @@ extension View {
         }
         
         return Button {
-            GraniteHaptic.light.invoke()
+            #if os(iOS)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
             GraniteNavigation.router(for: component.routerKey).push(memadd)
         } label: {
             self
@@ -111,7 +116,9 @@ extension View {
         
         return self
             .onTapGesture {
-                GraniteHaptic.light.invoke()
+                #if os(iOS)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                #endif
                 GraniteNavigation.router(for: component.routerKey).push(memadd)
             }
     }
@@ -128,7 +135,9 @@ extension View {
         
         return self
             .onTapGesture {
-                GraniteHaptic.light.invoke()
+                #if os(iOS)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                #endif
                 GraniteNavigation.router(for: component.routerKey).push(memadd)
             }
     }

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct NavigationComponent<Content: View>: GraniteComponent {
     @Environment(\.graniteNavigationRouterKey) var routerKey: String
+    @Environment(\.graniteNavigationDestinationStyle) var destinationStyle: GraniteNavigationDestinationStyle
     
     public struct Center: GraniteCenter {
         public struct State: GraniteState {
@@ -35,7 +36,7 @@ struct NavigationComponent<Content: View>: GraniteComponent {
 }
 
 extension NavigationComponent: View {
-    public var view: some View {
+    public var view: Content {
         content()
     }
 }

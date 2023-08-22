@@ -78,11 +78,17 @@ public final class GraniteNavigation: ObservableObject {
         children[key]
     }
     
+    //TODO: remove GranitePayload requirement
     @discardableResult
-    func set<Component : GraniteComponent>(@ViewBuilder _ component: @escaping (() -> Component)) -> String {
+    func set<Component : GraniteComponent>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
+                                           @ViewBuilder _ component: @escaping (() -> Component)) -> String {
         let screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
         let addr = NSString(format: "%p", addressHeap(o: screen)) as String
-        paths[addr] = AnyView(NavigationPassthroughComponent<Component, EmptyGranitePayload>(screen: screen))
+        
+        paths[addr] = AnyView(NavigationPassthroughComponent<Component,
+                              EmptyGranitePayload>(screen: screen)
+            .environment(\.graniteNavigationDestinationStyle, destinationStyle))
+        
         isActive[addr] = false
         return addr
     }
@@ -132,117 +138,6 @@ public final class GraniteNavigation: ObservableObject {
         }
     }
 }
-
-public extension GraniteNavigation {
-    @MainActor
-    static func push<Component: View>(@ViewBuilder _ component: @escaping (() -> Component)) {
-        
-        let component = NavigationComponent<Component>(component)
-        
-        let memadd = GraniteNavigation.router(for: component.routerKey).set {
-            component
-        }
-        
-        GraniteNavigation.router(for: component.routerKey).push(memadd)
-    }
-}
-
-//MARK: GraniteRouter
-struct GraniteRouter: View {
-    @ObservedObject var routes: GraniteNavigation
-    
-    init(_ routerKey: String) {
-        _routes = .init(initialValue: .router(for: routerKey))
-        GraniteLog("Router initializing with \(routerKey) - \(routes.id)", level: .debug)
-    }
-    
-    var keys: [String] {
-        routes.isActive.keys.map { "\($0)" }
-    }
-    
-    func isActive(_ id: String) -> Binding<Bool> {
-        .init(get: {
-            if routes.isActive[id] == true {
-                GraniteLog("GranitePath isActive detected \(keys.count)", level: .debug)
-            }
-            return routes.isActive[id] == true
-        }, set: { state in
-            routes.isActive[id] = state
-        })
-    }
-    
-    var body: some View {
-        Group {
-            #if os(iOS)
-            ForEach(Array(routes.stack), id: \.self) { id in
-                if let path = routes.paths[id] {
-                    path
-                        .environment(\.graniteNavigationRouterKey, routes.id)
-                }
-            }
-            
-            //Text("\(routes.id)")
-            //Text("Level: \(routes.level), last addr: \(routes.stack.last ?? "")")
-            #else
-            EmptyView()
-            #endif
-        }
-        .onAppear {
-            GraniteLog("New Stack Appeared: \(routes.id)", level: .debug)
-        }
-        .onDisappear {
-            routes.releaseStack()
-            GraniteLog("Navigation Stack Disappeared", level: .debug)
-        }
-    }
-}
-
-//MARK: GraniteNavigationView
-struct GraniteNavigationView<Content: View>: View {
-    @Environment(\.graniteNavigationStyle) var style
-    
-    let routerKey: String
-    
-    let content: () -> Content
-    init(@ViewBuilder content: @escaping () -> Content) {
-        self.content = content
-        
-        if GraniteNavigation.mainSet {
-            let key = "granite.app.main.router.child_\(GraniteNavigation.main.stackCount)"
-            routerKey = GraniteNavigation(key).id
-        } else {
-            routerKey = GraniteNavigation.main.id
-        }
-        GraniteLog("Navigation initializing with \(routerKey)", level: .debug)
-    }
-    
-    var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                
-                style.backgroundColor
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity)
-                
-                #if os(iOS)
-                content()
-                    .background(style.backgroundColor)
-                    .navigationViewStyle(.stack)
-                #else
-                content()
-                    .background(style.backgroundColor)
-                #endif
-                
-                GraniteRouter(routerKey)
-            }
-            .environment(\.graniteNavigationRouterKey, routerKey)
-            .navigationBarTitle("", displayMode: .inline)
-            .navigationBarHidden(true)
-        }
-    }
-}
-
 
 extension View {
     public func graniteNavigation(backgroundColor: Color = .black,

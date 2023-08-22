@@ -8,16 +8,25 @@
 import Foundation
 import SwiftUI
 
+public protocol GraniteNavigationDestination: View {
+    var destinationStyle: GraniteNavigationDestinationStyle { get }
+}
+
+public extension GraniteNavigationDestinationStyle {
+    var destinationStyle: GraniteNavigationDestinationStyle {
+        .init()
+    }
+}
+
 //MARK: Component
 public struct NavigationPassthroughComponent<Component: GraniteComponent, Payload: GranitePayload>: View {
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.graniteNavigationRouterKey) var routerKey: String
     
     class Screen<Component: GraniteComponent, Payload: GranitePayload> {
         
         var component: (() -> Component)
         var screen: AnyView? = nil
         var payload: Payload?
+        var style: GraniteNavigationDestinationStyle?
         
         init(_ component: @escaping (() -> Component), _ payload: Payload? = nil) {
             
@@ -32,6 +41,10 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                 
                 DispatchQueue.main.async { [weak self] in
                     guard let componentFinal = componentBuilt else { return }
+                    
+                    if let gnds = componentFinal.view as? (any GraniteNavigationDestination) {
+                        self?.style = gnds.destinationStyle
+                    }
                     self?.screen = AnyView(componentFinal)
                     completion?()
                 }
@@ -42,8 +55,14 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             self.screen = nil
         }
     }
+    #if os(iOS)
+    let generator = UIImpactFeedbackGenerator(style: .light)
+    #endif
     
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.graniteNavigationRouterKey) var routerKey: String
     @Environment(\.graniteNavigationStyle) var style
+    @Environment(\.graniteNavigationDestinationStyle) var destinationStyle
     
     fileprivate var screen: Screen<Component, Payload>
     @State var loaded: Bool = false
@@ -52,28 +71,43 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         self.screen = screen
     }
     
-    var leadingView : some View {
+    var destinationStyleFinal: GraniteNavigationDestinationStyle {
+        self.screen.style ?? destinationStyle
+    }
+    
+    var leadingItem: some View {
         Button(action: {
+            generator.impactOccurred()
             GraniteNavigation.router(for: routerKey).pop()
         }) {
-            HStack {
-                switch style.leadingButtonKind {
-                case .customSystem, .back, .close:
-                    Image(systemName: style.leadingButtonImageName)
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.white)
-                case .customView:
-                    style.leadingItem
-                default:
-                    Image(style.leadingButtonImageName)
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.white)
-                }
-                
-                Spacer()
+            switch style.leadingButtonKind {
+            case .customSystem, .back, .close:
+                Image(systemName: style.leadingButtonImageName)
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.white)
+            case .customView:
+                style.leadingItem
+            default:
+                Image(style.leadingButtonImageName)
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.white)
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+    
+    var navBar : some View {
+        HStack(spacing: 0) {
+            leadingItem
+            if destinationStyleFinal.fullWidth == false {
+                Spacer()
+            }
+            destinationStyleFinal
+                .trailingItem
+                .frame(maxWidth: destinationStyleFinal.fullWidth ? .infinity : nil)
+        }
+        .frame(height: style.barStyle.height)
+        .padding(style.barStyle.edges)
     }
     
     public var body: some View {
@@ -88,8 +122,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                 if loaded,
                    let screen = screen.screen {
                     VStack(spacing: 0) {
-                        leadingView
-                            .padding(.horizontal, 24)
+                        navBar
                         screen
                             //.graniteNavigation()
                     }

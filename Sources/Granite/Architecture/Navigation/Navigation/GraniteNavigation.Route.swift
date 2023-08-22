@@ -13,12 +13,7 @@ import UIKit
 
 //MARK: GraniteRouter
 struct GraniteRouter: View {
-    @ObservedObject var routes: GraniteNavigation
-    
-    init(_ routerKey: String) {
-        _routes = .init(initialValue: .router(for: routerKey))
-        GraniteLog("Router initializing with \(routerKey) - \(routes.id)", level: .debug)
-    }
+    @EnvironmentObject var routes: GraniteNavigation
     
     var keys: [String] {
         routes.isActive.keys.map { "\($0)" }
@@ -56,7 +51,7 @@ struct GraniteRouter: View {
         }
         .onDisappear {
             routes.releaseStack()
-            GraniteLog("Navigation Stack Disappeared", level: .debug)
+            GraniteLog("Navigation GraniteRouter Disappeared", level: .debug)
         }
     }
 }

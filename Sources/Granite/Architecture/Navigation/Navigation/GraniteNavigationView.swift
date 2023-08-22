@@ -12,19 +12,19 @@ import SwiftUI
 struct GraniteNavigationView<Content: View>: View {
     @Environment(\.graniteNavigationStyle) var style
     
-    let routerKey: String
+    @ObservedObject var routes: GraniteNavigation
     
     let content: () -> Content
     init(@ViewBuilder content: @escaping () -> Content) {
         self.content = content
         
         if GraniteNavigation.mainSet {
-            let key = "granite.app.main.router.child_\(GraniteNavigation.main.stackCount)"
-            routerKey = GraniteNavigation(key).id
+            _routes = .init(initialValue: .init(isMain: false))
         } else {
-            routerKey = GraniteNavigation.main.id
+            _routes = .init(initialValue: .main)
         }
-        GraniteLog("Navigation initializing with \(routerKey)", level: .debug)
+        
+        GraniteLog("Navigation initializing with \(routes.id)", level: .debug)
     }
     
     var body: some View {
@@ -40,14 +40,19 @@ struct GraniteNavigationView<Content: View>: View {
                 content()
                     .background(style.backgroundColor)
                     .navigationViewStyle(.stack)
+                    .onDisappear {
+                        GraniteLog("releasing: \(routes.id)", level: .debug)
+                        routes.releaseStack()
+                    }
                 #else
                 content()
                     .background(style.backgroundColor)
                 #endif
                 
-                GraniteRouter(routerKey)
+                GraniteRouter()
+                    .environmentObject(routes)
             }
-            .environment(\.graniteNavigationRouterKey, routerKey)
+            .environment(\.graniteNavigationRouterKey, routes.id)
             .navigationBarTitle("", displayMode: .inline)
             .navigationBarHidden(true)
         }

@@ -55,9 +55,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             self.screen = nil
         }
     }
-    #if os(iOS)
+#if os(iOS)
     let generator = UIImpactFeedbackGenerator(style: .light)
-    #endif
+#endif
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.graniteNavigationRouterKey) var routerKey: String
@@ -167,9 +167,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             GraniteLog("Navigated view dismissed via sliding")
             dismiss()
         }
-        #else
+#else
         ZStack {}
-        #endif
+#endif
     }
 }
 
@@ -201,23 +201,47 @@ extension UINavigationController: UIGestureRecognizerDelegate {
         super.viewDidLoad()
         interactivePopGestureRecognizer?.delegate = self
     }
-
+    
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         return viewControllers.count > 1
     }
-
+    
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         true
     }
 }
 #endif
 
-//Slide in /swipe
+public struct GraniteNavigationAnimationKey: EnvironmentKey {
+    public static var defaultValue: Bool = false
+}
+
+public extension EnvironmentValues {
+    var graniteNavigationAnimationKey: Bool {
+        get { self[GraniteNavigationAnimationKey.self] }
+        set { self[GraniteNavigationAnimationKey.self] = newValue }
+    }
+}
+
+public struct GraniteNavigationShowingKey: EnvironmentKey {
+    public static var defaultValue: Bool = false
+}
+
+public extension EnvironmentValues {
+    var graniteNavigationShowingKey: Bool {
+        get { self[GraniteNavigationShowingKey.self] }
+        set { self[GraniteNavigationShowingKey.self] = newValue }
+    }
+}
+
+//MARK: Slide in /swipe
 struct SlideView<MenuContent: View>: View {
     @Environment(\.graniteNavigationStyle) var style
     
     @Binding var isShowing: Bool
     @Binding var loaded: Bool
+    
+    let animationDuration: CGFloat
     
     var startThreshold: CGFloat = 0.05
     var activeThreshold: CGFloat = 0.6
@@ -228,6 +252,9 @@ struct SlideView<MenuContent: View>: View {
     
     @State var offsetX: CGFloat = 0
     
+    //First load only
+    @State var hasShown: Bool = false
+    
     var opacity: CGFloat {
         (offsetX / width) * 0.8
     }
@@ -235,19 +262,21 @@ struct SlideView<MenuContent: View>: View {
     private let menuContent: () -> MenuContent
     
     init(_ isShowing: Binding<Bool>,
-                loaded: Binding<Bool>,
-                @ViewBuilder _ menuContent: @escaping () -> MenuContent) {
+         loaded: Binding<Bool>,
+         animationDuration: CGFloat = 0.6,
+         @ViewBuilder _ menuContent: @escaping () -> MenuContent) {
         _isShowing = isShowing
         _loaded = loaded
-        #if os(iOS)
+#if os(iOS)
         let viewingWidth: CGFloat = UIScreen.main.bounds.width * viewingThreshold
-        #else
+#else
         let viewingWidth: CGFloat = ContainerConfig.iPhoneScreenWidth
-        #endif
+#endif
         self._offsetX = .init(initialValue: viewingWidth)
         self.width = viewingWidth
         self.startWidth = viewingWidth * startThreshold
         self.menuContent = menuContent
+        self.animationDuration = animationDuration
     }
     
     var body: some View {
@@ -281,7 +310,7 @@ struct SlideView<MenuContent: View>: View {
                         }
                     }
                 }
-        }
+            }
         
         return ZStack(alignment: .leading) {
             style.backgroundColor
@@ -292,16 +321,22 @@ struct SlideView<MenuContent: View>: View {
             
             menuContent()
                 .offset(x: self.offsetX)
+                .environment(\.graniteNavigationShowingKey, self.hasShown)
+                .environment(\.graniteNavigationAnimationKey, self.offsetX != 0)
         }
         .simultaneousGesture(drag)
         .onChange(of: loaded) { state in
             guard state else { return }
             
-            withAnimation {
+            //TODO: duration should be customizable from granite destination
+            withAnimation(.interactiveSpring(blendDuration: animationDuration)) {
                 self.isShowing = true
                 self.offsetX = 0
             }
-        }
             
+            DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration) {
+                self.hasShown = true
+            }
+        }
     }
 }

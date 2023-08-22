@@ -31,12 +31,8 @@ public final class GraniteNavigation: ObservableObject {
         .main.child(key) ?? .main
     }
     
-    public static var current: GraniteNavigation {
-        .init()
-    }
-    
     static var mainSet: Bool = false
-    static var main: GraniteNavigation = .init()
+    public static var main: GraniteNavigation = .init(isMain: true)
     private var children: [String : GraniteNavigation] = [:]
     
     var stackCount: Int {
@@ -46,14 +42,20 @@ public final class GraniteNavigation: ObservableObject {
     internal var isActive = [String : Bool]()
     
     let isMain: Bool
-    public init(_ routerKey: String? = nil) {
-        id = routerKey ?? "granite.app.main.router"
-        isMain = routerKey == nil
-        guard GraniteNavigation.mainSet == false else {
-            GraniteNavigation.main.addChild(id, navigation: self)
-            return
+    public init(isMain: Bool) {
+        let key: String
+        if isMain {
+            key = "granite.app.main.router"
+            GraniteNavigation.mainSet = true
+        } else {
+            key = "granite.app.main.router.child_\(GraniteNavigation.main.stackCount)"
         }
-        GraniteNavigation.mainSet = routerKey == nil
+        self.id = key
+        self.isMain = isMain
+        
+        if !isMain {
+            GraniteNavigation.main.addChild(key, navigation: self)
+        }
     }
     
     var paths: [String: AnyView] = [:]
@@ -152,8 +154,8 @@ extension View {
     public func graniteNavigation(backgroundColor: Color = .black,
                                   disable: Bool = false,
                                   @ViewBuilder leadingItem: @escaping () -> some View) -> some View {
-        self.initUINavigation(backgroundColor)
         
+        self.initUINavigation(backgroundColor)
         
         return self.initNavigationView(disable: disable,
                                        style: .init(leadingButtonKind: .customView,

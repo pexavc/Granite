@@ -7,9 +7,13 @@
 
 import Foundation
 import SwiftUI
+import GraniteUI
 
 //MARK: Component
 public struct NavigationPassthroughComponent<Component: GraniteComponent, Payload: GranitePayload>: View {
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.graniteNavigationPassKey) var isActive
+    
     class Screen<Component: GraniteComponent, Payload: GranitePayload> {
         
         var component: (() -> Component)
@@ -40,21 +44,19 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         }
     }
     
-    @Binding var isActive: Bool
-    
     @Environment(\.graniteNavigationStyle) var style
     
     fileprivate var screen: Screen<Component, Payload>
     @State var loaded: Bool = false
     
-    init(isActive: Binding<Bool>, screen: Screen<Component, Payload>) {
-        self._isActive = isActive
+    init(screen: Screen<Component, Payload>) {
         self.screen = screen
     }
     
     var leadingView : some View {
         Button(action: {
-            self.$isActive.wrappedValue = false
+            GraniteHaptic.light.invoke()
+            GraniteNavigation.routes.pop()
         }) {
             HStack {
                 switch style.leadingButtonKind {
@@ -77,39 +79,55 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     }
     
     public var body: some View {
-        #if os(iOS)
-        ZStack {
-            style.backgroundColor
-                .ignoresSafeArea()
-                .frame(maxWidth: .infinity,
-                       maxHeight: .infinity)
-            
-            if loaded,
-               let screen = screen.screen {
-                screen
-            }
-            
-            if loaded == false {
-                VStack {
-                    Spacer()
-                    #if os(iOS)
-                    ProgressView()
-                    #else
-                    ProgressView()
-                        .scaleEffect(0.6)
-                    #endif
-                    Spacer()
+#if os(iOS)
+        Group {
+            if isActive {
+                ZStack {
+                    style.backgroundColor
+                        .ignoresSafeArea()
+                        .frame(maxWidth: .infinity,
+                               maxHeight: .infinity)
+                    
+                    if loaded,
+                       let screen = screen.screen {
+                        VStack(spacing: 0) {
+                            leadingView
+                                .padding(.horizontal, 24)
+                            screen
+                                //.graniteNavigation()
+                        }
+                    }
+                    
+                    if loaded == false {
+                        VStack {
+                            Spacer()
+    #if os(iOS)
+                            ProgressView()
+    #else
+                            ProgressView()
+                                .scaleEffect(0.6)
+    #endif
+                            Spacer()
+                        }
+                    }
                 }
+                .onAppear {
+                    loaded = false
+                    self.screen.build {
+                        loaded = true
+                    }
+                }
+//                .navigationBarBackButtonHidden(true)
+//                .navigationBarItems(leading: leadingView)
+                .onChange(of: isActive) { state in
+                    if !state {
+                        self.screen.clean()
+                    }
+                }
+            } else {
+                EmptyView()
             }
         }
-        .onAppear {
-            loaded = false
-            self.screen.build {
-                loaded = true
-            }
-        }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarItems(leading: leadingView)
         #else
         ZStack {}
         #endif
@@ -118,6 +136,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
 
 //MARK: View
 public struct NavigationPassthroughView<Component: View>: View {
+    @Environment(\.graniteNavigationPassKey) var isActive
     class Screen<Component: View> {
         
         var component: (() -> Component)
@@ -145,8 +164,6 @@ public struct NavigationPassthroughView<Component: View>: View {
         }
     }
     
-    @Binding var isActive: Bool
-    
     @Environment(\.graniteNavigationStyle) var style
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
@@ -157,8 +174,7 @@ public struct NavigationPassthroughView<Component: View>: View {
     fileprivate var screen: Screen<Component>
     @State var loaded: Bool = false
     
-    init(isActive: Binding<Bool>, screen: Screen<Component>) {
-        self._isActive = isActive
+    init(screen: Screen<Component>) {
         self.screen = screen
     }
     
@@ -167,8 +183,8 @@ public struct NavigationPassthroughView<Component: View>: View {
             #if os(iOS)
             generator.prepare()
             generator.impactOccurred()
-            presentationMode.wrappedValue.dismiss()
             #endif
+            GraniteNavigation.routes.pop()
         }) {
             HStack {
                 switch style.leadingButtonKind {
@@ -193,38 +209,54 @@ public struct NavigationPassthroughView<Component: View>: View {
     
     public var body: some View {
         #if os(iOS)
-        ZStack {
-            style.backgroundColor
-                .ignoresSafeArea()
-                .frame(maxWidth: .infinity,
-                       maxHeight: .infinity)
-            
-            if loaded,
-               let screen = screen.screen {
-                screen
-            }
-            
-            if loaded == false {
-                VStack {
-                    Spacer()
-                    #if os(iOS)
-                    ProgressView()
-                    #else
-                    ProgressView()
-                        .scaleEffect(0.6)
-                    #endif
-                    Spacer()
+        Group {
+            if isActive {
+                ZStack {
+                    style.backgroundColor
+                        .ignoresSafeArea()
+                        .frame(maxWidth: .infinity,
+                               maxHeight: .infinity)
+                    
+                    if loaded,
+                       let screen = screen.screen {
+                        VStack(spacing: 0) {
+                            leadingView
+                                .padding(.horizontal, 24)
+                            screen
+                                //.graniteNavigation()
+                        }
+                    }
+                    
+                    if loaded == false {
+                        VStack {
+                            Spacer()
+#if os(iOS)
+                            ProgressView()
+#else
+                            ProgressView()
+                                .scaleEffect(0.6)
+#endif
+                            Spacer()
+                        }
+                    }
                 }
+                .onAppear {
+                    loaded = false
+                    self.screen.build {
+                        loaded = true
+                    }
+                }
+                .onChange(of: isActive) { state in
+                    if !state {
+                        self.screen.clean()
+                    }
+                }
+                .navigationBarBackButtonHidden(true)
+                .navigationBarItems(leading: leadingView)
+            } else {
+                EmptyView()
             }
         }
-        .onAppear {
-            loaded = false
-            self.screen.build {
-                loaded = true
-            }
-        }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarItems(leading: leadingView)
         #else
         ZStack {
             style.backgroundColor
@@ -252,6 +284,17 @@ public struct NavigationPassthroughView<Component: View>: View {
             }
         }
         #endif
+    }
+}
+
+struct GraniteNavigationPassthroughEventKey: EnvironmentKey {
+    public static var defaultValue: Bool = false
+}
+
+extension EnvironmentValues {
+    var graniteNavigationPassKey: Bool {
+        get { self[GraniteNavigationPassthroughEventKey.self] }
+        set { self[GraniteNavigationPassthroughEventKey.self] = newValue }
     }
 }
 

@@ -9,7 +9,10 @@
 import Foundation
 import SwiftUI
 
-public final class GraniteNavigation: SharableObject {
+
+//MARK: GraniteNavigation
+//Main stack
+public final class GraniteNavigation: ObservableObject {
     func address(o: UnsafePointer<Void>) -> Int {
         return unsafeBitCast(o, to: Int.self)
     }
@@ -19,42 +22,67 @@ public final class GraniteNavigation: SharableObject {
     }
     
     public static var initialValue: GraniteNavigation {
-        GraniteNavigation.routes
+        GraniteNavigation.main
     }
     
-    var id: String {
-        "granite.app.main.router"
+    var id: String
+    
+    public static func router(for key: String) -> GraniteNavigation {
+        .main.child(key) ?? .main
     }
     
-    public static var routes: GraniteNavigation = .init()
+    public static var current: GraniteNavigation {
+        .init()
+    }
+    
+    static var mainSet: Bool = false
+    static var main: GraniteNavigation = .init()
+    private var children: [String : GraniteNavigation] = [:]
+    
+    var stackCount: Int {
+        children.count
+    }
     
     internal var isActive = [String : Bool]()
     
-    private init() {
-        
+    let isMain: Bool
+    public init(_ routerKey: String? = nil) {
+        id = routerKey ?? "granite.app.main.router"
+        isMain = routerKey == nil
+        guard GraniteNavigation.mainSet == false else {
+            GraniteNavigation.main.addChild(id, navigation: self)
+            return
+        }
+        GraniteNavigation.mainSet = routerKey == nil
     }
     
     var paths: [String: AnyView] = [:]
-    @Published var stack: [String] = []
+    var stack: [String] = []
     
     var level: Int {
         stack.count
     }
     
-    @discardableResult
-    func setComponent<Component : GraniteComponent>(@ViewBuilder _ component: @escaping (() -> Component)) -> String {
-        var screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
-        let addr = NSString(format: "%p", address(o: &screen)) as String
-        paths[addr] = AnyView(NavigationPassthroughComponent<Component, EmptyGranitePayload>(screen: screen))
-        isActive[addr] = false
-        return addr
+    func addChild(_ key: String, navigation: GraniteNavigation) {
+        children[key] = navigation
     }
     
     @discardableResult
-    func set<Component : View>(@ViewBuilder _ component: @escaping (() -> Component)) -> String {
-        var screen = NavigationPassthroughView<Component>.Screen<Component>.init(component)
-        let addr = NSString(format: "%p", address(o: &screen)) as String
-        paths[addr] = AnyView(NavigationPassthroughView<Component>(screen: screen))
+    func removeChild(_ key: String) -> GraniteNavigation? {
+        let navigation = children[key]
+        children[key] = nil
+        return navigation
+    }
+    
+    func child(_ key: String) -> GraniteNavigation? {
+        children[key]
+    }
+    
+    @discardableResult
+    func set<Component : GraniteComponent>(@ViewBuilder _ component: @escaping (() -> Component)) -> String {
+        let screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
+        let addr = NSString(format: "%p", addressHeap(o: screen)) as String
+        paths[addr] = AnyView(NavigationPassthroughComponent<Component, EmptyGranitePayload>(screen: screen))
         isActive[addr] = false
         return addr
     }
@@ -71,29 +99,62 @@ public final class GraniteNavigation: SharableObject {
                     .environment(\.graniteNavigationPassKey, isActive[addr])
             }
         }
+        #else
+        self.objectWillChange.send()
         #endif
     }
     
     func pop() {
         guard let last = stack.last else { return }
-//        paths[last] = nil
         isActive[last] = false
         stack.removeLast()
-//        isActive[last] = nil
         
+        if stack.isEmpty {
+            releaseStack()
+        }
+        
+        #if os(iOS)
+        self.objectWillChange.send()
+        #endif
+    }
+    
+    func releaseStack() {
+        guard self.isMain == false else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.stack.removeAll()
+            self?.paths.removeAll()
+            self?.isActive.removeAll()
+            
+            if let id = self?.id {
+                GraniteNavigation.main.removeChild(id)
+                GraniteLog("Navigation Stack Released", level: .debug)
+            }
+        }
     }
 }
 
 public extension GraniteNavigation {
     @MainActor
     static func push<Component: View>(@ViewBuilder _ component: @escaping (() -> Component)) {
-        GraniteNavigation.routes.push(GraniteNavigation.routes.set(component))
+        
+        let component = NavigationComponent<Component>(component)
+        
+        let memadd = GraniteNavigation.router(for: component.routerKey).set {
+            component
+        }
+        
+        GraniteNavigation.router(for: component.routerKey).push(memadd)
     }
 }
 
-
+//MARK: GraniteRouter
 struct GraniteRouter: View {
-    @SharedObject("granite.app.main.router") var routes: GraniteNavigation
+    @ObservedObject var routes: GraniteNavigation
+    
+    init(_ routerKey: String) {
+        _routes = .init(initialValue: .router(for: routerKey))
+        GraniteLog("Router initializing with \(routerKey) - \(routes.id)", level: .debug)
+    }
     
     var keys: [String] {
         routes.isActive.keys.map { "\($0)" }
@@ -101,7 +162,9 @@ struct GraniteRouter: View {
     
     func isActive(_ id: String) -> Binding<Bool> {
         .init(get: {
-            GraniteLog("GranitePath isActive detected \(keys.count)", level: .debug)
+            if routes.isActive[id] == true {
+                GraniteLog("GranitePath isActive detected \(keys.count)", level: .debug)
+            }
             return routes.isActive[id] == true
         }, set: { state in
             routes.isActive[id] = state
@@ -111,28 +174,71 @@ struct GraniteRouter: View {
     var body: some View {
         Group {
             #if os(iOS)
-            ForEach(Array(routes.isActive.keys), id: \.self) { id in
+            ForEach(Array(routes.stack), id: \.self) { id in
                 if let path = routes.paths[id] {
                     path
-                    .environment(\.graniteNavigationPassKey,
-                                  isActive(id).wrappedValue)
+                        .environment(\.graniteNavigationRouterKey, routes.id)
                 }
-                
-//                NavigationLink(isActive: isActive(id)) {
-//                    if let path = routes.paths[id] {
-//                        path
-//                            .environment(\.graniteNavigationPassKey, isActive(id).wrappedValue)
-//                    }
-//                } label: {
-//                    EmptyView()
-//                }
-//                .isDetailLink(false)
             }
             
-            Text("Level: \(routes.level), last addr: \(routes.stack.last ?? "")")
+            //Text("\(routes.id)")
+            //Text("Level: \(routes.level), last addr: \(routes.stack.last ?? "")")
             #else
             EmptyView()
             #endif
+        }
+        .onAppear {
+            GraniteLog("New Stack Appeared: \(routes.id)", level: .debug)
+        }
+        .onDisappear {
+            routes.releaseStack()
+            GraniteLog("Navigation Stack Disappeared", level: .debug)
+        }
+    }
+}
+
+//MARK: GraniteNavigationView
+struct GraniteNavigationView<Content: View>: View {
+    @Environment(\.graniteNavigationStyle) var style
+    
+    let routerKey: String
+    
+    let content: () -> Content
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+        
+        if GraniteNavigation.mainSet {
+            let key = "granite.app.main.router.child_\(GraniteNavigation.main.stackCount)"
+            routerKey = GraniteNavigation(key).id
+        } else {
+            routerKey = GraniteNavigation.main.id
+        }
+        GraniteLog("Navigation initializing with \(routerKey)", level: .debug)
+    }
+    
+    var body: some View {
+        NavigationView {
+            ZStack(alignment: .top) {
+                
+                style.backgroundColor
+                    .ignoresSafeArea()
+                    .frame(maxWidth: .infinity,
+                           maxHeight: .infinity)
+                
+                #if os(iOS)
+                content()
+                    .background(style.backgroundColor)
+                    .navigationViewStyle(.stack)
+                #else
+                content()
+                    .background(style.backgroundColor)
+                #endif
+                
+                GraniteRouter(routerKey)
+            }
+            .environment(\.graniteNavigationRouterKey, routerKey)
+            .navigationBarTitle("", displayMode: .inline)
+            .navigationBarHidden(true)
         }
     }
 }
@@ -193,7 +299,7 @@ extension View {
             } else {
                 if !disableiOS16,
                    #available(macOS 13.0, iOS 16.0, *) {
-                    NavigationStack {
+                    NavigationStack {//WIP
                         ZStack(alignment: .top) {
                             style.backgroundColor
                                 .ignoresSafeArea()
@@ -211,32 +317,8 @@ extension View {
                     }
                     .environment(\.graniteNavigationStyle, style)
                 } else {
-                    NavigationView {
-                        #if os(iOS)
-                        ZStack(alignment: .top) {
-                            
-                            style.backgroundColor
-                                .ignoresSafeArea()
-                                .frame(maxWidth: .infinity,
-                                       maxHeight: .infinity)
-                            self
-                                .background(style.backgroundColor)
-                                .navigationViewStyle(.stack)
-                            
-                            GraniteRouter()
-                        }
-                        .navigationBarTitle("", displayMode: .inline)
-                        .navigationBarHidden(true)
-                        #else
-                        ZStack(alignment: .top) {
-                            style.backgroundColor
-                                .ignoresSafeArea()
-                                .frame(maxWidth: .infinity,
-                                       maxHeight: .infinity)
-                            self
-                                .background(style.backgroundColor)
-                        }
-                        #endif
+                    GraniteNavigationView {
+                        self
                     }
                     .environment(\.graniteNavigationStyle, style)
                 }

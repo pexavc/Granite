@@ -7,12 +7,11 @@
 
 import Foundation
 import SwiftUI
-import GraniteUI
 
 //MARK: Component
 public struct NavigationPassthroughComponent<Component: GraniteComponent, Payload: GranitePayload>: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.graniteNavigationPassKey) var isActive
+    @Environment(\.graniteNavigationRouterKey) var routerKey: String
     
     class Screen<Component: GraniteComponent, Payload: GranitePayload> {
         
@@ -55,8 +54,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     
     var leadingView : some View {
         Button(action: {
-            GraniteHaptic.light.invoke()
-            GraniteNavigation.routes.pop()
+            GraniteNavigation.router(for: routerKey).pop()
         }) {
             HStack {
                 switch style.leadingButtonKind {
@@ -81,208 +79,49 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     public var body: some View {
 #if os(iOS)
         Group {
-            if isActive {
-                ZStack {
-                    style.backgroundColor
-                        .ignoresSafeArea()
-                        .frame(maxWidth: .infinity,
-                               maxHeight: .infinity)
-                    
-                    if loaded,
-                       let screen = screen.screen {
-                        VStack(spacing: 0) {
-                            leadingView
-                                .padding(.horizontal, 24)
-                            screen
-                                //.graniteNavigation()
-                        }
-                    }
-                    
-                    if loaded == false {
-                        VStack {
-                            Spacer()
-    #if os(iOS)
-                            ProgressView()
-    #else
-                            ProgressView()
-                                .scaleEffect(0.6)
-    #endif
-                            Spacer()
-                        }
+            ZStack {
+                style.backgroundColor
+                    .ignoresSafeArea()
+                    .frame(maxWidth: .infinity,
+                           maxHeight: .infinity)
+                
+                if loaded,
+                   let screen = screen.screen {
+                    VStack(spacing: 0) {
+                        leadingView
+                            .padding(.horizontal, 24)
+                        screen
+                            //.graniteNavigation()
                     }
                 }
-                .onAppear {
-                    loaded = false
-                    self.screen.build {
-                        loaded = true
+                
+                if loaded == false {
+                    VStack {
+                        Spacer()
+#if os(iOS)
+                        ProgressView()
+#else
+                        ProgressView()
+                            .scaleEffect(0.6)
+#endif
+                        Spacer()
                     }
                 }
-//                .navigationBarBackButtonHidden(true)
-//                .navigationBarItems(leading: leadingView)
-                .onChange(of: isActive) { state in
-                    if !state {
-                        self.screen.clean()
-                    }
-                }
-            } else {
-                EmptyView()
+            }
+        }
+        .onDisappear {
+            self.screen.clean()
+            self.loaded = false
+            GraniteLog("Navigation Stack Window released", level: .debug)
+        }
+        .onAppear {
+            self.screen.build {
+                loaded = true
+                GraniteLog("Navigation Stack Window loaded, isPresented: \(presentationMode.wrappedValue.isPresented)", level: .debug)
             }
         }
         #else
         ZStack {}
-        #endif
-    }
-}
-
-//MARK: View
-public struct NavigationPassthroughView<Component: View>: View {
-    @Environment(\.graniteNavigationPassKey) var isActive
-    class Screen<Component: View> {
-        
-        var component: (() -> Component)
-        var screen: AnyView? = nil
-        
-        init(_ component: @escaping (() -> Component)) {
-            
-            self.component = component
-        }
-        
-        func build(completion: (() -> Void)? = nil) {
-            DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-                let componentBuilt = self?.component()
-                
-                DispatchQueue.main.async { [weak self] in
-                    guard let componentFinal = componentBuilt else { return }
-                    self?.screen = AnyView(componentFinal)
-                    completion?()
-                }
-            }
-        }
-        
-        func clean() {
-            self.screen = nil
-        }
-    }
-    
-    @Environment(\.graniteNavigationStyle) var style
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    
-    #if os(iOS)
-    let generator = UIImpactFeedbackGenerator(style: .light)
-    #endif
-    
-    fileprivate var screen: Screen<Component>
-    @State var loaded: Bool = false
-    
-    init(screen: Screen<Component>) {
-        self.screen = screen
-    }
-    
-    var leadingView : some View {
-        Button(action: {
-            #if os(iOS)
-            generator.prepare()
-            generator.impactOccurred()
-            #endif
-            GraniteNavigation.routes.pop()
-        }) {
-            HStack {
-                switch style.leadingButtonKind {
-                case .customSystem, .back, .close:
-                    Image(systemName: style.leadingButtonImageName)
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.white)
-                case .customView:
-                    style.leadingItem
-                default:
-                    Image(style.leadingButtonImageName)
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.white)
-                }
-                
-                Spacer()
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-        .animation(nil)
-    }
-    
-    public var body: some View {
-        #if os(iOS)
-        Group {
-            if isActive {
-                ZStack {
-                    style.backgroundColor
-                        .ignoresSafeArea()
-                        .frame(maxWidth: .infinity,
-                               maxHeight: .infinity)
-                    
-                    if loaded,
-                       let screen = screen.screen {
-                        VStack(spacing: 0) {
-                            leadingView
-                                .padding(.horizontal, 24)
-                            screen
-                                //.graniteNavigation()
-                        }
-                    }
-                    
-                    if loaded == false {
-                        VStack {
-                            Spacer()
-#if os(iOS)
-                            ProgressView()
-#else
-                            ProgressView()
-                                .scaleEffect(0.6)
-#endif
-                            Spacer()
-                        }
-                    }
-                }
-                .onAppear {
-                    loaded = false
-                    self.screen.build {
-                        loaded = true
-                    }
-                }
-                .onChange(of: isActive) { state in
-                    if !state {
-                        self.screen.clean()
-                    }
-                }
-                .navigationBarBackButtonHidden(true)
-                .navigationBarItems(leading: leadingView)
-            } else {
-                EmptyView()
-            }
-        }
-        #else
-        ZStack {
-            style.backgroundColor
-                .ignoresSafeArea()
-                .frame(maxWidth: .infinity,
-                       maxHeight: .infinity)
-            
-            if loaded,
-               let screen = screen.screen {
-                screen
-            }
-            
-            if loaded == false {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                    Spacer()
-                }
-            }
-        }
-        .onAppear {
-            loaded = false
-            self.screen.build {
-                loaded = true
-            }
-        }
         #endif
     }
 }
@@ -295,6 +134,17 @@ extension EnvironmentValues {
     var graniteNavigationPassKey: Bool {
         get { self[GraniteNavigationPassthroughEventKey.self] }
         set { self[GraniteNavigationPassthroughEventKey.self] = newValue }
+    }
+}
+
+struct GraniteNavigationRouterKey: EnvironmentKey {
+    public static var defaultValue: String = ""
+}
+
+extension EnvironmentValues {
+    var graniteNavigationRouterKey: String {
+        get { self[GraniteNavigationRouterKey.self] }
+        set { self[GraniteNavigationRouterKey.self] = newValue }
     }
 }
 

@@ -12,6 +12,24 @@ public protocol GraniteWindowDelegate {
 import Foundation
 import SwiftUI
 
+public struct GraniteRouteWindowProperties {
+    public let title: String
+    public let style: GraniteNavigationWindowStyle
+    
+    public init(title: String = "", style: GraniteNavigationWindowStyle = .default) {
+        self.title = title
+        self.style = style
+    }
+    
+    public static func resizable(size: CGSize) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: size, styleMask: .resizable))
+    }
+    
+    public static func resizable(_ width: CGFloat, _ height: CGFloat) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: .init(width: width, height: height), styleMask: .resizable))
+    }
+}
+
 public struct GraniteNavigationWindowStyle {
     var size: CGSize
     var minSize: CGSize?

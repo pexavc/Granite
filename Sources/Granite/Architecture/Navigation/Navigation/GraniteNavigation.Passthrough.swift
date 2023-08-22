@@ -130,6 +130,8 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             }
             #else
             mainView
+                .environment(\.graniteNavigationShowingKey, loaded)
+                .environment(\.graniteNavigationAnimationKey, false)
             #endif
         }
         .onDisappear {
@@ -231,7 +233,12 @@ public extension EnvironmentValues {
 }
 
 public struct GraniteNavigationShowingKey: EnvironmentKey {
+    #if os(iOS)
     public static var defaultValue: Bool = false
+    #else
+    //TODO: maybe needs more thought or more properties exposed to give navigation context
+    public static var defaultValue: Bool = true
+    #endif
 }
 
 public extension EnvironmentValues {

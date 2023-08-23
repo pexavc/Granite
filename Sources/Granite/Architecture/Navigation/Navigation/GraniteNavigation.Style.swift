@@ -117,12 +117,17 @@ extension EnvironmentValues {
 public struct GraniteNavigationDestinationStyle {
     var trailingItem: AnyView
     var fullWidth: Bool
+    //TODO: not fond of this lone color customizable
+    //location doesn't feel right and/or ds
+    var navBarBGColor: Color
     var animation: TransitionAnimation
     
     public init<Content: View>(fullWidth: Bool = false,
+                               navBarBGColor: Color = .clear,
                                animation: TransitionAnimation = .slide,
                                @ViewBuilder _ content: () -> Content = { EmptyView() }) {
         self.fullWidth = fullWidth
+        self.navBarBGColor = navBarBGColor
         self.animation = animation
         self.trailingItem = AnyView(content())
     }
@@ -145,18 +150,21 @@ public extension EnvironmentValues {
 
 public extension View {
     func graniteDestinationTrailingView<Content: View>(fullWidth: Bool = false,
+                                                       navBarBGColor: Color = .clear,
                                                        animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
                                                        @ViewBuilder _ content: () -> Content) -> some View {
         
         self
             .environment(\.graniteNavigationDestinationStyle,
                           .init(fullWidth: fullWidth,
+                                navBarBGColor: navBarBGColor,
                                 animation: animation,
                                 content))
     }
     
     func graniteDestinationTrailingViewIf<Content: View>(_ condition: Bool,
                                                          fullWidth: Bool = false,
+                                                         navBarBGColor: Color = .clear,
                                                          animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
                                                          @ViewBuilder _ content: () -> Content) -> some View {
         
@@ -165,6 +173,7 @@ public extension View {
                 self
                     .environment(\.graniteNavigationDestinationStyle,
                                   .init(fullWidth: fullWidth,
+                                        navBarBGColor: navBarBGColor,
                                         animation: animation,
                                         content))
             } else {

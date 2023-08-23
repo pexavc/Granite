@@ -163,6 +163,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                let screen = screen.screen {
                 VStack(spacing: 0) {
                     navBar
+                        .background(destinationStyle.navBarBGColor)
                     screen
                 }
             }

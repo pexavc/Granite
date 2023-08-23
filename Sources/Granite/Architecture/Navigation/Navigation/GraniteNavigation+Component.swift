@@ -9,7 +9,6 @@ import Foundation
 import SwiftUI
 
 struct NavigationComponent<Content: View>: GraniteComponent {
-    @Environment(\.graniteNavigationRouterKey) var routerKey: String
     @Environment(\.graniteNavigationDestinationStyle) var destinationStyle: GraniteNavigationDestinationStyle
     
     public struct Center: GraniteCenter {
@@ -27,11 +26,9 @@ struct NavigationComponent<Content: View>: GraniteComponent {
     var content: (() -> Content)
     var backgroundColor: Color
     public init(backgroundColor: Color = .clear,
-                @ViewBuilder _ content: @escaping (() -> Content),
-                _ provider: ((String, Self) -> Void)? = nil) {
+                @ViewBuilder _ content: @escaping (() -> Content)) {
         self.content = content
         self.backgroundColor = backgroundColor
-        provider?(routerKey, self)
     }
 }
 
@@ -40,3 +37,4 @@ extension NavigationComponent: View {
         content()
     }
 }
+

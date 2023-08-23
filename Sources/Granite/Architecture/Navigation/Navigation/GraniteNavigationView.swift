@@ -28,13 +28,15 @@ struct GraniteNavigationView<Content: View>: View {
     }
     
     var body: some View {
-        #if os(iOS)
-        NavigationView {
-            mainView
-        }
-        #else
+//        #if os(iOS)
+//        NavigationView {
+//            mainView
+//        }
+//        #else
+//        mainView
+//        #endif
         mainView
-        #endif
+            .environment(\.graniteRouter, routes.asRouter)
     }
     var mainView: some View {
         ZStack(alignment: .top) {
@@ -60,7 +62,6 @@ struct GraniteNavigationView<Content: View>: View {
             GraniteRouter()
                 .environmentObject(routes)
         }
-        .environment(\.graniteNavigationRouterKey, routes.id)
         .navBarTitle()
         .navBarHidden()
     }

@@ -13,6 +13,29 @@ import SwiftUI
 //MARK: GraniteNavigation
 //Main stack
 public final class GraniteNavigation: ObservableObject {
+    
+    public struct Router {
+        public let id: String
+        public init(id: String) {
+            self.id = id
+        }
+        
+        public var navigation: GraniteNavigation {
+            GraniteNavigation.router(for: id)
+        }
+        
+        public func push<C: View>(@ViewBuilder _ content: @escaping () -> C) {
+            self.navigation.push(content)
+        }
+        
+        public func push<C: GraniteNavigationDestination>(@ViewBuilder _ content: @escaping () -> C) {
+            self.navigation.push(content)
+        }
+    }
+    public var asRouter: Router {
+        .init(id: self.id)
+    }
+    
     func address(o: UnsafePointer<Void>) -> Int {
         return unsafeBitCast(o, to: Int.self)
     }
@@ -28,6 +51,7 @@ public final class GraniteNavigation: ObservableObject {
     var id: String
     
     public static func router(for key: String) -> GraniteNavigation {
+        //TODO: Wont work on tablet
         .main.child(key) ?? .main
     }
     
@@ -98,6 +122,8 @@ public final class GraniteNavigation: ObservableObject {
     
     func push(_ addr: String,
               window: GraniteRouteWindowProperties = .init()) {
+        
+        GraniteLog("nav stack pushing into: \(self.id)")
         
         isActive[addr] = true
         stack.append(addr)

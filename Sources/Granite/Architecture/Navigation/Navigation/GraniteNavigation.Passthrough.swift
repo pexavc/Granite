@@ -56,8 +56,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         }
     }
     
+    @Environment(\.graniteRouter) var router
+    
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.graniteNavigationRouterKey) var routerKey: String
     @Environment(\.graniteNavigationStyle) var style
     @Environment(\.graniteNavigationDestinationStyle) var destinationStyle
     
@@ -80,7 +81,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
         #if os(iOS)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #endif
-        GraniteNavigation.router(for: routerKey).pop()
+        router.navigation.pop()
         self.screen.clean()
         self.loaded = false
     }
@@ -193,12 +194,12 @@ extension EnvironmentValues {
     }
 }
 
-struct GraniteNavigationRouterKey: EnvironmentKey {
-    public static var defaultValue: String = ""
+public struct GraniteNavigationRouterKey: EnvironmentKey {
+    public static var defaultValue: GraniteNavigation.Router = GraniteNavigation.main.asRouter
 }
 
-extension EnvironmentValues {
-    var graniteNavigationRouterKey: String {
+public extension EnvironmentValues {
+    var graniteRouter: GraniteNavigation.Router {
         get { self[GraniteNavigationRouterKey.self] }
         set { self[GraniteNavigationRouterKey.self] = newValue }
     }

@@ -36,7 +36,7 @@ struct GraniteRouter: View {
             ForEach(Array(routes.stack), id: \.self) { id in
                 if let path = routes.paths[id] {
                     path
-                        .environment(\.graniteNavigationRouterKey, routes.id)
+                        .environment(\.graniteRouter, routes.asRouter)
                 }
             }
             
@@ -60,11 +60,12 @@ extension View {
     
     public func routeButton<C: View>(title: String = "",
                                      window: GraniteRouteWindowProperties = .init(),
-                                     @ViewBuilder component : @escaping (() -> C)) -> some View {
+                                     @ViewBuilder component : @escaping (() -> C),
+                                     with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
         let component = NavigationComponent<C>(component)
-        
-        let memadd = GraniteNavigation.router(for: component.routerKey).set {
+        let router = router()
+        let memadd = router.navigation.set {
             component
         }
         
@@ -73,23 +74,21 @@ extension View {
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            GraniteNavigation
-                .router(for: component.routerKey)
-                .push(memadd, window: window)
+            router.navigation.push(memadd, window: window)
         } label: {
             self
         }
     }
     
     public func routeButton<C: GraniteNavigationDestination>(title: String = "",
-                                     window: GraniteRouteWindowProperties = .init(),
-                                     @ViewBuilder component : @escaping (() -> C)) -> some View {
+                                                             window: GraniteRouteWindowProperties = .init(),
+                                                             @ViewBuilder component : @escaping (() -> C),
+                                                             with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
         let component = NavigationComponent<C>(component)
         
-        let memadd = GraniteNavigation
-            .router(for: component.routerKey)
-            .set(destinationStyle: component.destinationStyle) {
+        let router = router()
+        let memadd = router.navigation.set(destinationStyle: component.destinationStyle) {
             component
         }
         
@@ -97,9 +96,7 @@ extension View {
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            GraniteNavigation
-                .router(for: component.routerKey)
-                .push(memadd, window: window)
+            router.navigation.push(memadd, window: window)
         } label: {
             self
         }
@@ -107,11 +104,13 @@ extension View {
     
     public func route<C: View>(title: String = "",
                                window: GraniteRouteWindowProperties = .init(),
-                               @ViewBuilder component : @escaping (() -> C)) -> some View {
+                               @ViewBuilder component : @escaping (() -> C),
+                               with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
         let component = NavigationComponent<C>(component)
         
-        let memadd = GraniteNavigation.router(for: component.routerKey).set {
+        let router = router()
+        let memadd = router.navigation.set {
             component
         }
         
@@ -120,19 +119,19 @@ extension View {
                 #if os(iOS)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 #endif
-                GraniteNavigation
-                    .router(for: component.routerKey)
-                    .push(memadd, window: window)
+                router.navigation.push(memadd, window: window)
             }
     }
     
     public func route<C: GraniteNavigationDestination>(title: String = "",
                                                        window: GraniteRouteWindowProperties = .init(),
-                                                       @ViewBuilder component : @escaping (() -> C)) -> some View {
+                                                       @ViewBuilder component : @escaping (() -> C),
+                                                       with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
         let component = NavigationComponent<C>(component)
         
-        let memadd = GraniteNavigation.router(for: component.routerKey).set {
+        let router = router()
+        let memadd = router.navigation.set {
             component
         }
         
@@ -141,19 +140,18 @@ extension View {
                 #if os(iOS)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 #endif
-                GraniteNavigation
-                    .router(for: component.routerKey)
-                    .push(memadd, window: window)
+                router.navigation.push(memadd, window: window)
             }
     }
     
     public func routeIf<C: View>(_ condition: Bool,
                                  title: String = "",
                                  window: GraniteRouteWindowProperties = .init(),
-                                 @ViewBuilder component : @escaping (() -> C)) -> some View {
+                                 @ViewBuilder component : @escaping (() -> C),
+                                 with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         return Group {
             if condition {
-                self.route(title: title, window: window, component: component)
+                self.route(title: title, window: window, component: component, with: router)
             } else {
                 self
             }
@@ -163,10 +161,11 @@ extension View {
     public func routeIf<C: GraniteNavigationDestination>(_ condition: Bool,
                                                          title: String = "",
                                                          window: GraniteRouteWindowProperties = .init(),
-                                                         @ViewBuilder component : @escaping (() -> C)) -> some View {
+                                                         @ViewBuilder component : @escaping (() -> C),
+                                                         with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         return Group {
             if condition {
-                self.route(title: title, window: window, component: component)
+                self.route(title: title, window: window, component: component, with: router)
             } else {
                 self
             }
@@ -180,27 +179,40 @@ public extension GraniteNavigation {
                                       window: GraniteRouteWindowProperties = .init(),
                                       @ViewBuilder _ component: @escaping (() -> Component)) {
         
+        self.main.push(destinationStyle: destinationStyle, window: window, component)
+    }
+    
+    func push<Component: View>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
+                                      window: GraniteRouteWindowProperties = .init(),
+                                      @ViewBuilder _ component: @escaping (() -> Component)) {
+        
         let component = NavigationComponent<Component>(component)
         
-        let memadd = GraniteNavigation.router(for: component.routerKey).set {
+        let memadd = GraniteNavigation.main.set {
             component
         }
         
-        GraniteNavigation.router(for: component.routerKey).push(memadd, window: window)
+        GraniteNavigation.main.push(memadd, window: window)
     }
     
     @MainActor
     static func push<Component: GraniteNavigationDestination>(window: GraniteRouteWindowProperties = .init(),
                                                               @ViewBuilder _ component: @escaping (() -> Component)) {
         
+        self.main.push(window: window, component)
+    }
+    
+    func push<Component: GraniteNavigationDestination>(window: GraniteRouteWindowProperties = .init(),
+                                                              @ViewBuilder _ component: @escaping (() -> Component)) {
+        
         let component = NavigationComponent<Component>(component)
         
-        let memadd = GraniteNavigation.router(for: component.routerKey).set(destinationStyle: component.destinationStyle) {
+        let memadd = GraniteNavigation.main.set(destinationStyle: component.destinationStyle) {
             component
         }
         
         GraniteNavigation
-            .router(for: component.routerKey)
+            .main
             .push(memadd, window: window)
     }
 }

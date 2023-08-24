@@ -38,8 +38,9 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 let componentBuilt = self?.component()
                 
+                //TODO: remove payload building logic, in favor of EnvironmentValues
                 //fire once
-                componentBuilt?.locate?.command.build(.dependency(self?.payload))
+                //componentBuilt?.locate?.command.build(.dependency(self?.payload))
                 
                 GraniteLog("building screen")
                 
@@ -67,6 +68,7 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.graniteNavigationStyle) var style
     @Environment(\.graniteNavigationDestinationStyle) var destinationStyle
+    @Environment(\.graniteNavigationWindowDestinationStyle) var windowStyle
     
     fileprivate var screen: Screen<Component, Payload>
     @State var loaded: Bool = false
@@ -128,7 +130,6 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
     }
     
     public var body: some View {
-#if os(iOS)
         Group {
             #if os(iOS)
             SlideAnimationContainerView($isShowing,
@@ -157,9 +158,6 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             GraniteLog("Navigated view dismissed via sliding")
             dismiss()
         }
-#else
-        ZStack {}
-#endif
     }
     
     public var mainView: some View {
@@ -167,13 +165,27 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             
             if loaded,
                let view = screen.view {
-                VStack(spacing: 0) {
-                    navBar
-                        .background(destinationStyleFinal.navBarBGColor)
+                //Only available when a new window is pushed
+                if let windowStyle {
                     view
-                }
-                .onAppear {
-                    GraniteLog("screen appeared")
+                        .onAppear {
+                            GraniteLog("screen appeared")
+                        }
+                        .overlay(alignment: .top) { destinationStyleFinal.navBarBGColor
+                            .ignoresSafeArea(.all)
+                            .frame(maxWidth: .infinity)
+                            //TODO: seems hackish
+                            //but, on a simple window that has a transparent title window bar, a height:1 sets the whole region automatically to the default titlebarheight
+                            .frame(height: 1) }
+                } else {
+                    VStack(spacing: 0) {
+                        navBar
+                            .background(destinationStyleFinal.navBarBGColor)
+                        view
+                    }
+                    .onAppear {
+                        GraniteLog("screen appeared")
+                    }
                 }
             }
             

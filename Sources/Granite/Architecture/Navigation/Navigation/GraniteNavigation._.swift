@@ -121,23 +121,35 @@ public final class GraniteNavigation: ObservableObject {
     }
     
     func push(_ addr: String,
-              window: GraniteRouteWindowProperties = .init()) {
+              window: GraniteRouteWindowProperties? = nil) {
         
         GraniteLog("nav stack pushing into: \(self.id)")
         
-        isActive[addr] = true
-        stack.append(addr)
         
         #if os(macOS)
-        if let path = paths[addr] {
-            GraniteNavigationWindow
-                .shared
-                .addWindow(title: window.title,
-                           style: window.style) {
-                path()
+        if let window {
+            if let path = paths[addr] {
+                GraniteNavigationWindow
+                    .shared
+                    .addWindow(props: window) {
+                        path()
+                            .environment(\.graniteNavigationWindowDestinationStyle, .newWindow)
+                            .graniteNavigation(backgroundColor: Color.clear)
+                            .frame(minWidth: window.style.minSize.width,
+                                   minHeight: window.style.minSize.height)
+                    }
+                
+                isActive[addr] = nil
+                paths[addr] = nil
             }
+        } else {
+            isActive[addr] = true
+            stack.append(addr)
+            self.objectWillChange.send()
         }
         #else
+        isActive[addr] = true
+        stack.append(addr)
         self.objectWillChange.send()
         #endif
     }
@@ -228,14 +240,8 @@ extension View {
                                 .ignoresSafeArea()
                                 .frame(maxWidth: .infinity,
                                        maxHeight: .infinity)
-                            
-                            #if os(iOS)
                             self
                                 .background(style.backgroundColor)
-                            #else
-                            self
-                                .background(style.backgroundColor)
-                            #endif
                         }
                     }
                     .environment(\.graniteNavigationStyle, style)

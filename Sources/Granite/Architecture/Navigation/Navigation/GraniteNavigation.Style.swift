@@ -121,6 +121,8 @@ public struct GraniteNavigationDestinationStyle {
     //location doesn't feel right and/or ds
     var navBarBGColor: Color
     var animation: TransitionAnimation
+    var isWindow: Bool
+    var titleBarHeight: CGFloat = NSWindow.defaultTitleBarHeight
     
     public init<Content: View>(fullWidth: Bool = false,
                                navBarBGColor: Color = .clear,
@@ -130,10 +132,23 @@ public struct GraniteNavigationDestinationStyle {
         self.navBarBGColor = navBarBGColor
         self.animation = animation
         self.trailingItem = { AnyView(content()) }
+        self.isWindow = false
+    }
+    
+    public init(isWindow: Bool) {
+        self.fullWidth = false
+        self.navBarBGColor = .clear
+        self.animation = .slide
+        self.trailingItem = { AnyView(EmptyView()) }
+        self.isWindow = isWindow
     }
     
     public enum TransitionAnimation {
         case slide
+    }
+    
+    public static var newWindow: GraniteNavigationDestinationStyle {
+        .init(isWindow: true)
     }
 }
 
@@ -145,6 +160,17 @@ public extension EnvironmentValues {
     var graniteNavigationDestinationStyle: GraniteNavigationDestinationStyle {
         get { self[GraniteNavigationDestinationStyleKey.self] }
         set { self[GraniteNavigationDestinationStyleKey.self] = newValue }
+    }
+}
+
+private struct GraniteNavigationWindowDestinationStyleKey: EnvironmentKey {
+    static let defaultValue: GraniteNavigationDestinationStyle? = nil
+}
+
+public extension EnvironmentValues {
+    var graniteNavigationWindowDestinationStyle: GraniteNavigationDestinationStyle? {
+        get { self[GraniteNavigationWindowDestinationStyleKey.self] }
+        set { self[GraniteNavigationWindowDestinationStyleKey.self] = newValue }
     }
 }
 

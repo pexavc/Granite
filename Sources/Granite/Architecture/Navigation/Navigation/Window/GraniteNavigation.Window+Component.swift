@@ -40,10 +40,7 @@ extension WindowComponent: View {
             GraniteNavigationWindow.backgroundColor = NSColor(backgroundColor)
             
             GraniteNavigationWindow.shared.addWindow(id: GraniteNavigationWindow.defaultMainWindowId,
-                                                     title: "",
-                                                     style: .init(size: .init(width: 900,
-                                                                              height: 600), minSize: .init(width: 900, height: 600),
-                                                                  styleMask: .resizable),
+                                                     props: .resizable(900, 600).minSize(900, 600),
                                                      isMain: true) {
                 content()
             }

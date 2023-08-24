@@ -149,7 +149,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         compile()
         
         store.willChange.bind("stateWillChange")
-        //store.syncSignal.bind("syncStateSignal")
+        store.syncSignal.bind("syncStateSignal")
     }
     
     func listen(_ listeners: () -> Void) {

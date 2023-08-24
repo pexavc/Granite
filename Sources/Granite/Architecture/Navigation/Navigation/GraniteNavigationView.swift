@@ -46,7 +46,6 @@ struct GraniteNavigationView<Content: View>: View {
                 .frame(maxWidth: .infinity,
                        maxHeight: .infinity)
             
-            #if os(iOS)
             content()
                 .background(style.backgroundColor)
                 .navStack()
@@ -54,10 +53,6 @@ struct GraniteNavigationView<Content: View>: View {
                     GraniteLog("releasing: \(routes.id)", level: .debug)
                     routes.releaseStack()
                 }
-            #else
-            content()
-                .background(style.backgroundColor)
-            #endif
             
             GraniteRouter()
                 .environmentObject(routes)

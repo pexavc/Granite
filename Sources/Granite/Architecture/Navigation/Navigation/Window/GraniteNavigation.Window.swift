@@ -15,30 +15,57 @@ import SwiftUI
 public struct GraniteRouteWindowProperties {
     public let title: String
     public let style: GraniteNavigationWindowStyle
+    public let center: Bool = false
+    public let isClosable: Bool = true
+    public let isCompact: Bool
+    public let isChildWindow: Bool
+    public let titlebarAware: Bool = false
     
-    public init(title: String = "", style: GraniteNavigationWindowStyle = .default) {
+    public init(title: String = "",
+                style: GraniteNavigationWindowStyle = .default,
+                isCompact: Bool = false,
+                isChildWindow: Bool = false) {
         self.title = title
         self.style = style
+        self.isCompact = isCompact
+        self.isChildWindow = isChildWindow
+    }
+    
+    public static func child(size: CGSize) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: .init(width: size.width,
+                                              height: size.height),
+                                  mask: .resizable),
+                     isChildWindow: true)
     }
     
     public static func resizable(size: CGSize) -> GraniteRouteWindowProperties {
-        return .init(style: .init(size: size, styleMask: .resizable))
+        return .init(style: .init(size: size, mask: .resizable))
     }
     
     public static func resizable(_ width: CGFloat, _ height: CGFloat) -> GraniteRouteWindowProperties {
-        return .init(style: .init(size: .init(width: width, height: height), styleMask: .resizable))
+        return .init(style: .init(size: .init(width: width, height: height), mask: .resizable))
+    }
+    
+    public func minSize(_ width: CGFloat, _ height: CGFloat) -> GraniteRouteWindowProperties {
+        return .init(style: .init(size: self.style.size,
+                                  minSize: .init(width: width, height: height),
+                                  mask: .resizable))
+    }
+    
+    public func updateCompact(_ state: Bool) -> GraniteRouteWindowProperties {
+        .init(title: self.title, style: self.style, isCompact: state)
     }
 }
 
 public struct GraniteNavigationWindowStyle {
     var size: CGSize
-    var minSize: CGSize?
-    var styleMask: NSWindow.StyleMask?
+    var minSize: CGSize
+    var mask: NSWindow.StyleMask?
     
-    public init(size: CGSize, minSize: CGSize? = nil, styleMask: NSWindow.StyleMask? = nil) {
+    public init(size: CGSize, minSize: CGSize? = nil, mask: NSWindow.StyleMask? = nil) {
         self.size = size
-        self.minSize = minSize
-        self.styleMask = styleMask
+        self.minSize = minSize ?? size
+        self.mask = mask
     }
     
     public static var `default`: GraniteNavigationWindowStyle {
@@ -52,6 +79,9 @@ public struct GraniteNavigationWindowStyle {
 public struct NSWindow {
     public enum StyleMask {
         case resizable
+    }
+    static var defaultTitleBarHeight: CGFloat {
+        0
     }
 }
 #elseif os(macOS)
@@ -72,20 +102,18 @@ public class GraniteNavigationWindow {
     public static var defaultMainWindowId: String = "granite.app.window.main"
     
     public func addWindow<Content: View>(id: String? = nil,
-                                         title: String,
-                                         style: GraniteNavigationWindowStyle? = nil,
-                                         titlebarAware: Bool = false,
+                                         props: GraniteRouteWindowProperties,
                                          isMain: Bool = false,
                                          @ViewBuilder content : (@escaping () -> Content)) {
         
         let windowId: String = id ?? "Window_\(count)"
-        let windowSize: CGSize = style?.size ?? GraniteNavigationWindow.defaultSize
-        let minWindowSize: CGSize = style?.minSize ?? windowSize
+        let windowSize: CGSize = props.style.size ?? GraniteNavigationWindow.defaultSize
+        let minWindowSize: CGSize = props.style.minSize ?? windowSize
         windows[windowId] = .init(id: windowId, isMain: isMain, size: windowSize)
         windows[windowId]?.backgroundColor = GraniteNavigationWindow.backgroundColor
-        windows[windowId]?.build(title: title, styleMask: style?.styleMask, center: false, show: true) { [weak self] in
+        windows[windowId]?.build(props, show: true) { [weak self] in
             content()
-                .padding(.top, titlebarAware ? (self?.windows[windowId]?.titleBarHeight ?? NSWindow.defaultTitleBarHeight) : 0)
+                .padding(.top, props.titlebarAware ? (self?.windows[windowId]?.titleBarHeight ?? NSWindow.defaultTitleBarHeight) : 0)
         }
         
         GraniteLog("Adding window: \(windowId) of size: \(windowSize)", level: .debug)
@@ -120,6 +148,7 @@ public class GraniteNavigationWindow {
     }
 }
 
+/// Container to manage the NSWindow and its lifecycle/observers
 public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
     @Published var isPrepared: Bool = false
     
@@ -170,17 +199,11 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
         super.init()
     }
     
-    public func build<Content: View>(title: String? = nil,
-                                     styleMask: NSWindow.StyleMask? = nil,
-                                     center: Bool = false,
+    public func build<Content: View>(_ props: GraniteRouteWindowProperties,
                                      show: Bool = false,
                                      @ViewBuilder content : (@escaping () -> Content)) {
         DispatchQueue.main.async { [weak self] in
-            self?.main = AppWindow(self?.size ?? .zero,
-                                   title: title,
-                                   center: center,
-                                   styleMask: styleMask,
-                                   compact: self?.isAlert == true)
+            self?.main = AppWindow(props.updateCompact(self?.isAlert == true))
             
             self?.main?.delegate = self
             
@@ -195,7 +218,10 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
             
             self?.main?.backgroundColor = GraniteNavigationWindow.backgroundColor
             
-            self?.main?.contentViewController = NSHostingController(rootView: content())
+            self?.main?.contentViewController = NSHostingController(rootView: content()
+                .transformEnvironment(\.graniteNavigationWindowDestinationStyle, transform: { value in
+                    value?.titleBarHeight = self?.main?.titlebarHeight ?? NSWindow.defaultTitleBarHeight
+                }))
             
             self?.main?.contentMinSize = self?.size ?? .zero
             self?.main?.minSize = self?.size ?? .zero
@@ -225,9 +251,11 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
     
     public func toggle() {
         if isVisible {
+            GraniteLog("[\(self.id)] hiding: \(self.main?.frame ?? .zero)", level: .debug)
             main?.close()
             isVisible = false
         } else {
+            GraniteLog("[\(self.id)] showing: \(self.main?.frame ?? .zero)", level: .debug)
             main?.level = .floating
             main?.makeKeyAndOrderFront(nil)
             main?.level = .normal
@@ -277,25 +305,21 @@ public class GraniteWindow: NSObject, Identifiable, NSWindowDelegate {
 }
 
 public extension NSWindow {
-    func graniteStyle(title: String? = nil,
-                      styleMask: NSWindow.StyleMask? = nil,
-                      isClosabe: Bool = true,
-                      compact: Bool = false,
-                      isChildWindow: Bool = false) {
+    func graniteStyle(_ props: GraniteRouteWindowProperties) {
         
         var windowStyleMask: NSWindow.StyleMask
         
-        if isChildWindow {
+        if props.isChildWindow {
             windowStyleMask = []
         } else {
             windowStyleMask = [.fullSizeContentView, .titled]
         }
         
-        if isClosabe {
+        if props.isClosable {
             windowStyleMask.formUnion(.closable)
         }
         
-        if let mask = styleMask {
+        if let mask = props.style.mask {
             windowStyleMask.formUnion(mask)
         }
         
@@ -308,14 +332,14 @@ public extension NSWindow {
         //        level = .floating
         backgroundColor = .clear
         
-        standardWindowButton(.closeButton)?.isHidden = isClosabe == false// compact == true
+        standardWindowButton(.closeButton)?.isHidden = props.isClosable == false// compact == true
         standardWindowButton(.miniaturizeButton)?.isHidden = true
         standardWindowButton(.zoomButton)?.isHidden = true
         
         titlebarAppearsTransparent = true
         
-        if let windowTitle = title, compact == false {
-            self.title = windowTitle
+        if props.isCompact == false {
+            self.title = props.title
         }
     }
 }
@@ -324,46 +348,36 @@ public class AppWindow: NSWindow {
     
     private var lastPoint: CGPoint? = nil
     
-    public init(_ size: CGSize = GraniteNavigationWindow.defaultSize,
-                title: String? = nil,
-                center: Bool = false,
-                styleMask: NSWindow.StyleMask? = nil,
-                isClosabe: Bool = true,
-                compact: Bool = false,
-                isChildWindow: Bool = false) {
+    public init(_ props: GraniteRouteWindowProperties) {
         
         let origin: CGPoint
         
         var windowStyleMask: NSWindow.StyleMask
         
-        if isChildWindow {
+        if props.isChildWindow {
             windowStyleMask = []
             origin = .zero
         } else {
             windowStyleMask = [.fullSizeContentView, .titled]
-            origin = AppWindow.originPoint(size, newSize: .zero, center: center)
+            origin = AppWindow.originPoint(props.style.size, newSize: .zero, center: props.center)
         }
         
         
-        if isClosabe {
+        if props.isClosable {
             windowStyleMask.formUnion(.closable)
         }
         
-        if let mask = styleMask {
+        if let mask = props.style.mask {
             windowStyleMask.formUnion(mask)
         }
         
-        super.init(contentRect: .init(origin: origin, size: size),
+        super.init(contentRect: .init(origin: origin, size: props.style.size),
                    styleMask: windowStyleMask,
                    backing: .buffered,
                    defer: false)
         
         self.lastPoint = origin
-        self.graniteStyle(title: title,
-                          styleMask: styleMask,
-                          isClosabe: isClosabe,
-                          compact: compact,
-                          isChildWindow: isChildWindow)
+        self.graniteStyle(props)
         //        titleVisibility = .hidden
     }
     

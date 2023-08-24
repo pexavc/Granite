@@ -186,9 +186,9 @@ public protocol EventExecutable {
 }
 
 public enum GraniteReducerListenKind {
-    case broadcast
+    case broadcast(String = "granite.reducer.listener.broadcast")
     case beam
-    case bubble(String)
+    case bubble(String = "granite.reducer.listener.bubble")
 }
 
 open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable {
@@ -245,7 +245,7 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     //instanced signals (Receiver)
     internal var beamCancellables: Set<AnyCancellable> = .init()
     //shared signals (Receiver)
-    internal var broadcastCancellables: Set<AnyCancellable> = .init()
+    internal var broadcastCancellables: [String : AnyCancellable] = [:]
     //component tree (Receiver)
     internal var bubbledCancellables: [String : AnyCancellable] = [:]
     
@@ -267,8 +267,10 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     deinit {
         beamCancellables.forEach { $0.cancel() }
         beamCancellables.removeAll()
-        broadcastCancellables.forEach { $0.cancel() }
-        broadcastCancellables.removeAll()
+        expedition.beam.removeObservers()
+        broadcastCancellables.values.forEach { $0.cancel() }
+        broadcastCancellables = [:]
+        expedition.broadcast.removeObservers()
         bubbledCancellables.values.forEach { $0.cancel() }
         bubbledCancellables = [:]
     }
@@ -327,11 +329,9 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
             beamCancellables.removeAll()
             expedition.beam.removeObservers()
             beamCancellables.insert(expedition.beam += handler)
-        case .broadcast:
-            broadcastCancellables.forEach { $0.cancel() }
-            broadcastCancellables.removeAll()
-            expedition.broadcast.removeObservers()
-            broadcastCancellables.insert(expedition.broadcast += handler)
+        case .broadcast(let id):
+            bubbledCancellables[id]?.cancel()
+            broadcastCancellables[id] = (expedition.broadcast += handler)
         case .bubble(let id):
             bubbledCancellables[id]?.cancel()
             bubbledCancellables[id] = signal += handler

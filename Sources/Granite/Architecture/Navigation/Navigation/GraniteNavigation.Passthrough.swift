@@ -166,14 +166,15 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             if loaded,
                let view = screen.view {
                 //Only available when a new window is pushed
-                if let windowStyle {
+                if let windowStyle,
+                   #available(iOS 15.0, macOS 12.0, *) {
                     view
                         .onAppear {
                             GraniteLog("screen appeared")
                         }
                         .overlay(alignment: .top) { destinationStyleFinal.navBarBGColor
-                            .ignoresSafeArea(.all)
-                            .frame(maxWidth: .infinity)
+                                .ignoresSafeArea(.all)
+                                .frame(maxWidth: .infinity)
                             //TODO: seems hackish
                             //but, on a simple window that has a transparent title window bar, a height:1 sets the whole region automatically to the default titlebarheight
                             .frame(height: 1) }

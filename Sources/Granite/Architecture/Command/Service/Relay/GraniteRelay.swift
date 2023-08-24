@@ -60,6 +60,7 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     }
     
     deinit {
+        //GraniteLog("relay deinit 🛸: \(NAME)", level: .debug)
         removeObservers(includeChildren: true)
     }
     
@@ -73,6 +74,7 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     }
     
     func setup() {
+        //GraniteLog("relay setting up 🛸: \(NAME)", level: .debug)
         bind()
         observe()
     }
@@ -115,20 +117,20 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
 //                guard store.id != id else {
 //                    return
 //                }
-//                
+//
 ////                store.silence()
 //                store.prepareSync()
 //                self?.update(state)
-////                if store.viewUpdatesSilenced == false {
-////                    DispatchQueue.main.async { [weak self] in
-////                        if self?.isSilenced == false {
-////                            self?.objectWillChange.send()
-////                        } else {
-////                            self?.pendingUpdates = true
-////                        }
-////                    }
-////                }
-////                store.awake()
+//                if store.viewUpdatesSilenced == false {
+//                    DispatchQueue.main.async { [weak self] in
+//                        if self?.isSilenced == false {
+//                            self?.objectWillChange.send()
+//                        } else {
+//                            self?.pendingUpdates = true
+//                        }
+//                    }
+//                }
+//                //store.awake()
 //            }
 //        }
         

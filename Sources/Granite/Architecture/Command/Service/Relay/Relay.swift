@@ -48,15 +48,15 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     //to reducer events not forwarding from within reducers
     //notes can be found in GraniteReducer.swift
     
-    //@SharedObject(String(reflecting: Self.self)) public var relay : GraniteRelay<Service>
-    @ObservedObject public var relay : GraniteRelay<Service>
+    @SharedObject(String(reflecting: Self.self)) public var relay : GraniteRelay<Service>
+//    @ObservedObject public var relay : GraniteRelay<Service>
     
     let isDiscoverable: Bool
     public init(_ behavior: GraniteRelayBehavior = .normal,
                 isDiscoverable: Bool = true, label: String = "") {
         self.isDiscoverable = isDiscoverable
         //relay.update(behavior: behavior)
-        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
+//        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
         
         switch behavior {
         case .silence:

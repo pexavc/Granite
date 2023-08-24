@@ -174,12 +174,21 @@ public protocol EventExecutable {
     func send()
     func send(_ payload: GranitePayload)
     
+    @discardableResult
+    func listen(_ kind: GraniteReducerListenKind, _ handler: @escaping (GranitePayload?) -> Void ) -> Self
+    
     func update(_ payload: GranitePayload?)
     func execute(_ state: AnyGraniteState?) -> AnyGraniteState
     func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState
     init()
     init(debounce interval: Double)
     init(throttle interval: Double)
+}
+
+public enum GraniteReducerListenKind {
+    case broadcast
+    case beam
+    case bubble(String)
 }
 
 open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable {
@@ -233,15 +242,12 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     
     public var interaction: GraniteReducerInteraction
     
-    public enum ListenKind {
-        case broadcast
-        case beam
-    }
-    
     //instanced signals (Receiver)
     internal var beamCancellables: Set<AnyCancellable> = .init()
     //shared signals (Receiver)
     internal var broadcastCancellables: Set<AnyCancellable> = .init()
+    //component tree (Receiver)
+    internal var bubbledCancellables: [String : AnyCancellable] = [:]
     
     required public init() {
         self.interaction = .basic
@@ -263,6 +269,8 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         beamCancellables.removeAll()
         broadcastCancellables.forEach { $0.cancel() }
         broadcastCancellables.removeAll()
+        bubbledCancellables.values.forEach { $0.cancel() }
+        bubbledCancellables = [:]
     }
     
     public func execute(_ state: AnyGraniteState?) -> AnyGraniteState {
@@ -312,7 +320,7 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     }
     
     @discardableResult
-    public func listen(_ kind: ListenKind = .beam, _ handler: @escaping (GranitePayload?) -> Void ) -> Self {
+    public func listen(_ kind: GraniteReducerListenKind, _ handler: @escaping (GranitePayload?) -> Void ) -> Self {
         switch kind {
         case .beam:
             beamCancellables.forEach { $0.cancel() }
@@ -324,8 +332,15 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
             broadcastCancellables.removeAll()
             expedition.broadcast.removeObservers()
             broadcastCancellables.insert(expedition.broadcast += handler)
+        case .bubble(let id):
+            bubbledCancellables[id]?.cancel()
+            bubbledCancellables[id] = signal += handler
         }
         return self
+    }
+    @discardableResult
+    public func listen(_ handler: @escaping (GranitePayload?) -> Void ) -> Self {
+        self.listen(.beam, handler)
     }
     
     public func send() {

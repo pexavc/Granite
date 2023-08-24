@@ -88,6 +88,8 @@ public class GraniteNavigationWindow {
                 .padding(.top, titlebarAware ? (self?.windows[windowId]?.titleBarHeight ?? NSWindow.defaultTitleBarHeight) : 0)
         }
         
+        GraniteLog("Adding window: \(windowId) of size: \(windowSize)", level: .debug)
+        
         if isMain {
             mainWindowId = windowId
         }

@@ -115,7 +115,7 @@ extension EnvironmentValues {
 }
 
 public struct GraniteNavigationDestinationStyle {
-    var trailingItem: AnyView
+    var trailingItem: (() -> AnyView)
     var fullWidth: Bool
     //TODO: not fond of this lone color customizable
     //location doesn't feel right and/or ds
@@ -125,11 +125,11 @@ public struct GraniteNavigationDestinationStyle {
     public init<Content: View>(fullWidth: Bool = false,
                                navBarBGColor: Color = .clear,
                                animation: TransitionAnimation = .slide,
-                               @ViewBuilder _ content: () -> Content = { EmptyView() }) {
+                               @ViewBuilder _ content: @escaping () -> Content = { EmptyView() }) {
         self.fullWidth = fullWidth
         self.navBarBGColor = navBarBGColor
         self.animation = animation
-        self.trailingItem = AnyView(content())
+        self.trailingItem = { AnyView(content()) }
     }
     
     public enum TransitionAnimation {
@@ -152,7 +152,7 @@ public extension View {
     func graniteDestinationTrailingView<Content: View>(fullWidth: Bool = false,
                                                        navBarBGColor: Color = .clear,
                                                        animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
-                                                       @ViewBuilder _ content: () -> Content) -> some View {
+                                                       @ViewBuilder _ content: @escaping () -> Content) -> some View {
         
         self
             .environment(\.graniteNavigationDestinationStyle,
@@ -166,7 +166,7 @@ public extension View {
                                                          fullWidth: Bool = false,
                                                          navBarBGColor: Color = .clear,
                                                          animation: GraniteNavigationDestinationStyle.TransitionAnimation = .slide,
-                                                         @ViewBuilder _ content: () -> Content) -> some View {
+                                                         @ViewBuilder _ content: @escaping () -> Content) -> some View {
         
         Group {
             if condition {

@@ -82,7 +82,7 @@ public final class GraniteNavigation: ObservableObject {
         }
     }
     
-    var paths: [String: AnyView] = [:]
+    var paths: [String: () -> AnyView] = [:]
     var stack: [String] = []
     
     var level: Int {
@@ -112,9 +112,9 @@ public final class GraniteNavigation: ObservableObject {
         let screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
         let addr = NSString(format: "%p", addressHeap(o: screen)) as String
         
-        paths[addr] = AnyView(NavigationPassthroughComponent<Component,
-                              EmptyGranitePayload>(screen: screen)
-            .environment(\.graniteNavigationDestinationStyle, destinationStyle))
+        paths[addr] = { AnyView(NavigationPassthroughComponent<Component,
+                                EmptyGranitePayload>(screen: screen)
+            .environment(\.graniteNavigationDestinationStyle, destinationStyle)) }
         
         isActive[addr] = false
         return addr
@@ -130,8 +130,11 @@ public final class GraniteNavigation: ObservableObject {
         
         #if os(macOS)
         if let path = paths[addr] {
-            GraniteNavigationWindow.shared.addWindow(title: window.title, style: window.style) {
-                path
+            GraniteNavigationWindow
+                .shared
+                .addWindow(title: window.title,
+                           style: window.style) {
+                path()
             }
         }
         #else
@@ -143,10 +146,6 @@ public final class GraniteNavigation: ObservableObject {
         guard let last = stack.last else { return }
         isActive[last] = false
         stack.removeLast()
-        
-        if stack.isEmpty {
-            releaseStack()
-        }
         
         #if os(iOS)
         self.objectWillChange.send()

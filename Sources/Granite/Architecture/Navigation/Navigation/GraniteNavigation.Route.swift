@@ -35,7 +35,7 @@ struct GraniteRouter: View {
 #if os(iOS)
             ForEach(Array(routes.stack), id: \.self) { id in
                 if let path = routes.paths[id] {
-                    path
+                    path()
                         .environment(\.graniteRouter, routes.asRouter)
                 }
             }
@@ -50,7 +50,6 @@ struct GraniteRouter: View {
             GraniteLog("New Stack Appeared: \(routes.id)", level: .debug)
         }
         .onDisappear {
-            routes.releaseStack()
             GraniteLog("Navigation GraniteRouter Disappeared", level: .debug)
         }
     }
@@ -63,10 +62,9 @@ extension View {
                                      @ViewBuilder component : @escaping (() -> C),
                                      with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
-        let component = NavigationComponent<C>(component)
         let router = router()
         let memadd = router.navigation.set {
-            component
+            NavigationComponent<C>(component)
         }
         
         return Button {
@@ -85,11 +83,9 @@ extension View {
                                                              @ViewBuilder component : @escaping (() -> C),
                                                              with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
-        let component = NavigationComponent<C>(component)
-        
         let router = router()
-        let memadd = router.navigation.set(destinationStyle: component.destinationStyle) {
-            component
+        let memadd = router.navigation.set {
+            NavigationComponent<C>(component)
         }
         
         return Button {
@@ -107,11 +103,9 @@ extension View {
                                @ViewBuilder component : @escaping (() -> C),
                                with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
-        let component = NavigationComponent<C>(component)
-        
         let router = router()
         let memadd = router.navigation.set {
-            component
+            NavigationComponent<C>(component)
         }
         
         return self
@@ -128,11 +122,9 @@ extension View {
                                                        @ViewBuilder component : @escaping (() -> C),
                                                        with router: @escaping (() -> GraniteNavigation.Router)) -> some View {
         
-        let component = NavigationComponent<C>(component)
-        
         let router = router()
         let memadd = router.navigation.set {
-            component
+            NavigationComponent<C>(component)
         }
         
         return self
@@ -173,6 +165,7 @@ extension View {
     }
 }
 
+//MARK: static access
 public extension GraniteNavigation {
     @MainActor
     static func push<Component: View>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
@@ -205,10 +198,8 @@ public extension GraniteNavigation {
     func push<Component: GraniteNavigationDestination>(window: GraniteRouteWindowProperties = .init(),
                                                               @ViewBuilder _ component: @escaping (() -> Component)) {
         
-        let component = NavigationComponent<Component>(component)
-        
-        let memadd = GraniteNavigation.main.set(destinationStyle: component.destinationStyle) {
-            component
+        let memadd = GraniteNavigation.main.set {
+            NavigationComponent<Component>(component)
         }
         
         GraniteNavigation

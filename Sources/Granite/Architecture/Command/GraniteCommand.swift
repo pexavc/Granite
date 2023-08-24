@@ -87,6 +87,8 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     internal var reducers: [AnyReducerContainer] = []
     internal var notifies: [String: AnyNotify] = [:]
     
+    internal var listenersSet: Bool = false
+    
     fileprivate var kind: GraniteCommandKind
     public var buildBehavior: BuildBehavior
     
@@ -147,6 +149,17 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         compile()
         
         store.willChange.bind("stateWillChange")
+        //store.syncSignal.bind("syncStateSignal")
+    }
+    
+    func listen(_ listeners: () -> Void) {
+        //only once
+        guard !listenersSet else { return }
+        listenersSet = true
+        Prospector.shared.push(id: self.id, .command)
+        listeners()
+        Prospector.shared.pop(.command)
+        GraniteLog("applying listeners to: \(NAME)")
     }
     
     func observe() {

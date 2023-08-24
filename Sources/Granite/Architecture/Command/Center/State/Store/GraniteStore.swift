@@ -125,14 +125,18 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         pausableLoaded?.store(in: &cancellables)
         pausableLoaded?.state = .normal
         
+        /*
+         See GraniteCommand: Line 152
+             GraniteRelay:   Line 114-133
+         */
         syncCancellable = syncSignal += { [weak self] (state, id) in
             guard self?.syncEnabled == true,
                   self?.id != id else {
                 return
             }
-            
+
             //GraniteLog("syncing: \(self?.NAME)", level: .debug)
-            
+
             //self?.silence()
             self?.isSyncing = true
             self?.state = state

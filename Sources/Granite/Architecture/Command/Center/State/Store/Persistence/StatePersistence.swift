@@ -36,10 +36,11 @@ public struct StatePersistence<State : Codable> {
         storage.readWriteQueue?.addBarrierBlock {
             if let state : State = storage.restore() {
                 setState(state)
-                isLoaded(true)
             } else {
                 save()
             }
+            
+            isLoaded(true)
         }
     }
     

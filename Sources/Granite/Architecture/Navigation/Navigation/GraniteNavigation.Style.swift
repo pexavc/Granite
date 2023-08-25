@@ -120,16 +120,20 @@ public struct GraniteNavigationDestinationStyle {
     //TODO: not fond of this lone color customizable
     //location doesn't feel right and/or ds
     var navBarBGColor: Color
+    //Sets destination to overlay
+    var isCustomTrailing: Bool
     var animation: TransitionAnimation
     var isWindow: Bool
     var titleBarHeight: CGFloat = NSWindow.defaultTitleBarHeight
     
     public init<Content: View>(fullWidth: Bool = false,
                                navBarBGColor: Color = .clear,
+                               isCustomTrailing: Bool = false,
                                animation: TransitionAnimation = .slide,
                                @ViewBuilder _ content: @escaping () -> Content = { EmptyView() }) {
         self.fullWidth = fullWidth
         self.navBarBGColor = navBarBGColor
+        self.isCustomTrailing = isCustomTrailing
         self.animation = animation
         self.trailingItem = { AnyView(content()) }
         self.isWindow = false
@@ -138,6 +142,7 @@ public struct GraniteNavigationDestinationStyle {
     public init(isWindow: Bool) {
         self.fullWidth = false
         self.navBarBGColor = .clear
+        self.isCustomTrailing = false
         self.animation = .slide
         self.trailingItem = { AnyView(EmptyView()) }
         self.isWindow = isWindow

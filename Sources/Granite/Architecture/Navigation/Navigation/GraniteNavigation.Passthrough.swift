@@ -179,13 +179,21 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                             //but, on a simple window that has a transparent title window bar, a height:1 sets the whole region automatically to the default titlebarheight
                             .frame(height: 1) }
                 } else {
-                    VStack(spacing: 0) {
-                        navBar
-                            .background(destinationStyleFinal.navBarBGColor)
-                        view
-                    }
-                    .onAppear {
-                        GraniteLog("screen appeared")
+                    if destinationStyleFinal.isCustomTrailing {
+                        ZStack(alignment: .top) {
+                            navBar
+                                .background(destinationStyleFinal.navBarBGColor)
+                            view
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            navBar
+                                .background(destinationStyleFinal.navBarBGColor)
+                            view
+                        }
+                        .onAppear {
+                            GraniteLog("screen appeared")
+                        }
                     }
                 }
             }

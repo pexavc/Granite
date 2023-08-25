@@ -45,7 +45,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.willChange
     }
     
-    @ObservedObject fileprivate var container : GraniteStore<State>
+    @ObservedObject var container : GraniteStore<State>
 
     var autoSave: Bool {
         container.autoSave

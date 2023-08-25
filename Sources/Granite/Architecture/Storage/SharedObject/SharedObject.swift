@@ -53,7 +53,10 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 		}
 		
 		private func subscribe() {
-			cancellable = object.objectWillChange.sink { [unowned self] _ in
+            cancellable = object
+                .objectWillChange
+                .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+                .sink { [unowned self] _ in
 				self.objectWillChange.send()
 			}
 		}

@@ -14,17 +14,20 @@ public struct GraniteTabStyle {
     let paddingTabs: EdgeInsets
     let paddingIcons: EdgeInsets
     let landscape: Bool
+    let enableHaptic: Bool
     
     public init(height: CGFloat = 75,
                 backgroundColor: Color = .black,
                 paddingTabs: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0),
                 paddingIcons: EdgeInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0),
                 landscape: Bool = false,
+                enableHaptic: Bool = false,
                 @ViewBuilder background: (() -> some View) = { EmptyView() }) {
         self.height = height
         self.paddingTabs = paddingTabs
         self.paddingIcons = paddingIcons
         self.landscape = landscape
+        self.enableHaptic = enableHaptic
         self.background = AnyView(background())
     }
 }
@@ -236,6 +239,7 @@ public struct GraniteTabView: View {
                     Button(action: {
                         currentTab = indexOf(tab)
                         
+                        guard style.enableHaptic else { return }
                         #if os(iOS)
                         generator.prepare()
                         generator.impactOccurred()
@@ -290,6 +294,7 @@ public struct GraniteTabView: View {
                         Button(action: {
                             currentTab = indexOf(tab)
                             
+                            guard style.enableHaptic else { return }
                             #if os(iOS)
                             generator.prepare()
                             generator.impactOccurred()

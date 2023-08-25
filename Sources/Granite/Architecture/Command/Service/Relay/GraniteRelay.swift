@@ -62,6 +62,8 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     deinit {
         //GraniteLog("relay deinit 🛸: \(NAME)", level: .debug)
         removeObservers(includeChildren: true)
+        cancellableBag.forEach { $0.cancel() }
+        cancellableBag.removeAll()
     }
     
     public func update(behavior: GraniteRelayBehavior) {
@@ -84,22 +86,33 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         
         self.reducers = events.flatMap { $0.compile(self, properties: .init(isOnline: self.kind == .online)) }
     }
-    
+    var cancellableBag = Set<AnyCancellable>()
     func observe() {
         guard let store = service.center.findStore() else { return }
         guard let changeSignal = (store.willChange as? GraniteSignal.Payload<Service.GenericGraniteCenter.GenericGraniteState>) else {
             return
         }
         
-        changeSignal += { [weak self] state in
+        store
+            .container
+            .$state
+            .removeDuplicates()
+            .sink { [weak self] _ in
             DispatchQueue.main.async {
-                if self?.isSilenced == false {
-                    self?.objectWillChange.send()
-                } else {
-                    self?.pendingUpdates = true
-                }
+                self?.objectWillChange.send()
             }
-        }
+        }.store(in: &cancellableBag)
+        
+//        changeSignal += { [weak self] state in
+//            DispatchQueue.main.async {
+//
+//                if self?.isSilenced == false {
+//                    self?.objectWillChange.send()
+//                } else {
+//                    self?.pendingUpdates = true
+//                }
+//            }
+//        }
         
         /*
          Moving the syncSignal here from State seems

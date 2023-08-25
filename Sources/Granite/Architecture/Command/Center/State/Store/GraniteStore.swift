@@ -50,7 +50,8 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
     
     let willChange: GraniteSignal.Payload<State>
     let didLoad: GraniteSignal
-
+    //var didChange: (() -> Void)? = nil
+    
     @Published internal var state : State
     @Published var isLoaded : Bool
     
@@ -85,7 +86,7 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
             if self?.silenceViewUpdates == false {
                 self?.willChange.send(state)
             }
-                
+            
             guard self?.isSyncing == false else {
                 self?.isSyncing = false
                 return
@@ -93,7 +94,6 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
             
             let shouldSync = self?.syncEnabled == true
             let id = self?.id ?? .init()
-            
             if let signal = self?.syncSignal,
                shouldSync {
                 

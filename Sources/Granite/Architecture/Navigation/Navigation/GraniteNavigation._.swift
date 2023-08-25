@@ -31,6 +31,10 @@ public final class GraniteNavigation: ObservableObject {
         public func push<C: GraniteNavigationDestination>(@ViewBuilder _ content: @escaping () -> C) {
             self.navigation.push(content)
         }
+        
+        public func pop() {
+            self.navigation.pop()
+        }
     }
     public var asRouter: Router {
         .init(id: self.id)

@@ -16,13 +16,14 @@ struct GraniteNavigationView<Content: View>: View {
     
     let content: () -> Content
     init(@ViewBuilder content: @escaping () -> Content) {
-        self.content = content
         
         if GraniteNavigation.mainSet {
             _routes = .init(initialValue: .init(isMain: false))
         } else {
             _routes = .init(initialValue: .main)
         }
+        
+        self.content = content
         
         GraniteLog("Navigation initializing with \(routes.id)", level: .debug)
     }
@@ -47,6 +48,7 @@ struct GraniteNavigationView<Content: View>: View {
                        maxHeight: .infinity)
             
             content()
+                .environment(\.graniteRouter, routes.asRouter)
                 .background(style.backgroundColor)
                 .navStack()
                 .onDisappear {

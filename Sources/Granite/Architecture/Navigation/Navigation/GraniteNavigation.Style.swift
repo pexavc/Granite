@@ -155,6 +155,14 @@ public struct GraniteNavigationDestinationStyle {
     public static var newWindow: GraniteNavigationDestinationStyle {
         .init(isWindow: true)
     }
+    
+    public static func bgNavbar(_ navBarBGColor: Color) -> GraniteNavigationDestinationStyle {
+        .init(navBarBGColor: navBarBGColor)
+    }
+    
+    public static func customTrailing(_ navBarBGColor: Color = .clear) -> GraniteNavigationDestinationStyle {
+        .init(navBarBGColor: navBarBGColor, isCustomTrailing: true)
+    }
 }
 
 private struct GraniteNavigationDestinationStyleKey: EnvironmentKey {

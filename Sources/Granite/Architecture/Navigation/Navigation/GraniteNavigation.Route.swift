@@ -165,20 +165,22 @@ public extension GraniteNavigation {
                                       window: GraniteRouteWindowProperties? = nil,
                                       @ViewBuilder _ component: @escaping (() -> Component)) {
         
-        self.main.push(destinationStyle: destinationStyle, window: window, component)
+        self.main.push(destinationStyle: destinationStyle,
+                       window: window,
+                       component)
     }
     
-    func push<Component: View>(destinationStyle: GraniteNavigationDestinationStyle = .init(),
+    func push<Component: View>(destinationStyle style: GraniteNavigationDestinationStyle = .init(),
                                window: GraniteRouteWindowProperties? = nil,
                                @ViewBuilder _ component: @escaping (() -> Component)) {
         
         let component = NavigationComponent<Component>(component)
         
-        let memadd = GraniteNavigation.main.set {
+        let memadd = self.set(destinationStyle: style) {
             component
         }
         
-        GraniteNavigation.main.push(memadd, window: window)
+        self.push(memadd, window: window)
     }
     
     @MainActor

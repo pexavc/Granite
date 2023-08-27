@@ -24,8 +24,9 @@ public final class GraniteNavigation: ObservableObject {
             GraniteNavigation.router(for: id)
         }
         
-        public func push<C: View>(@ViewBuilder _ content: @escaping () -> C) {
-            self.navigation.push(content)
+        public func push<C: View>(style: GraniteNavigationDestinationStyle = .init(),
+                                  @ViewBuilder _ content: @escaping () -> C) {
+            self.navigation.push(destinationStyle: style, content)
         }
         
         public func push<C: GraniteNavigationDestination>(@ViewBuilder _ content: @escaping () -> C) {
@@ -94,6 +95,7 @@ public final class GraniteNavigation: ObservableObject {
     }
     
     func addChild(_ key: String, navigation: GraniteNavigation) {
+        GraniteLog("adding child \(key) to \(self.id)", level: .debug)
         children[key] = navigation
     }
     
@@ -105,7 +107,7 @@ public final class GraniteNavigation: ObservableObject {
     }
     
     func child(_ key: String) -> GraniteNavigation? {
-        children[key]
+        return children[key]
     }
     
     //TODO: remove GranitePayload requirement
@@ -128,7 +130,6 @@ public final class GraniteNavigation: ObservableObject {
               window: GraniteRouteWindowProperties? = nil) {
         
         GraniteLog("nav stack pushing into: \(self.id)")
-        
         
         #if os(macOS)
         if let window {

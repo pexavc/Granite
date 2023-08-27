@@ -172,12 +172,15 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                         .onAppear {
                             GraniteLog("screen appeared")
                         }
-                        .overlay(alignment: .top) { destinationStyleFinal.navBarBGColor
+                        .overlay(alignment: .top) {
+                            destinationStyleFinal
+                                .navBarBGColor
                                 .ignoresSafeArea(.all)
                                 .frame(maxWidth: .infinity)
-                            //TODO: seems hackish
-                            //but, on a simple window that has a transparent title window bar, a height:1 sets the whole region automatically to the default titlebarheight
-                            .frame(height: 1) }
+                                //TODO: seems hackish
+                                //but, on a simple window that has a transparent title window bar, a height:1 sets the whole region automatically to the default titlebarheight
+                                .frame(height: 1)
+                        }
                 } else {
                     if destinationStyleFinal.isCustomTrailing {
                         ZStack(alignment: .top) {

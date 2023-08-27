@@ -2,7 +2,7 @@
 //  File.swift
 //  
 //
-//  Created by Ritesh Pakala on 8/25/23.
+//  Created by PEXAVC on 8/25/23.
 //
 
 import Foundation
@@ -74,7 +74,7 @@ public struct NavigationDestionationViewModifier<TrailingContent: View>: ViewMod
                     trailingView
                         .frame(height: style.barStyle.height)
                         .padding(style.barStyle.edges)
-                        .background(style.backgroundColor)
+                        //.background(style.backgroundColor)
                 }
             }
             content

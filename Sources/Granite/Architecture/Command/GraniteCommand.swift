@@ -159,7 +159,7 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         Prospector.shared.push(id: self.id, .command)
         listeners()
         Prospector.shared.pop(.command)
-        GraniteLog("applying listeners to: \(NAME)")
+        GraniteLog("applying listeners to: \(NAME)", level: .debug)
     }
     
     func observe() {

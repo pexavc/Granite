@@ -30,6 +30,10 @@ extension GraniteService {
         locate?.command.isLoaded == true
     }
     
+    public func restore(wait forCompletion: Bool = false) {
+        locate?.command.center.findStore()?.restore(wait: forCompletion)
+    }
+    
     public func preload() {
         locate?.command.center.findStore()?.preload()
     }

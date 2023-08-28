@@ -67,12 +67,8 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.awake(viewUpdatesOnly: updateView)
     }
     
-    func restore() {
-        container.restore()
-        
-        if shouldPreload {
-            preload()
-        }
+    func restore(wait forCompletion: Bool = false) {
+        container.restore(wait: shouldPreload || forCompletion)
     }
     
     func preload() {

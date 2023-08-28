@@ -188,8 +188,8 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
         persistence.forceRestore()
     }
     
-    func restore() {
-        self.persistence.restore()
+    func restore(wait forCompletion: Bool = false) {
+        self.persistence.restore(wait: forCompletion)
     }
     
     deinit {

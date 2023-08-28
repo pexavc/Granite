@@ -12,4 +12,6 @@ import Foundation
 public protocol SharableObject: ObservableObject {
 	
 	static var initialValue: Self { get }
+    //Relays should commit restores here
+    func sharableLoaded()
 }

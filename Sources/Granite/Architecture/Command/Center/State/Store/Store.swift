@@ -67,6 +67,14 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.awake(viewUpdatesOnly: updateView)
     }
     
+    func restore() {
+        container.restore()
+        
+        if shouldPreload {
+            preload()
+        }
+    }
+    
     func preload() {
         container.preload()
     }
@@ -99,6 +107,7 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.silenceViewUpdates
     }
     
+    private var shouldPreload: Bool
     /*
      TODO:
      - Add debounce function
@@ -106,21 +115,22 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
      */
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
         container = .init(storage: storage, autoSave: autoSave)
+        self.shouldPreload = false
     }
     
     public init(persist fileName: String, autoSave: Bool = false, preload: Bool = false) {
         container = .init(storage: FilePersistence(key: fileName), autoSave: autoSave)
-        
+        self.shouldPreload = preload
         /*if a Service is called multiple times its relevant
         persistence files make sure it is operating from its
         last state
         */
-        guard autoSave else { return }
-        
-        container.restore()
-        
-        if preload {
-            self.preload()
-        }
+//        guard autoSave else { return }
+//
+//        //container.restore()
+//
+//        if preload {
+//            //self.preload()
+//        }
     }
 }

@@ -120,7 +120,9 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         case .service(.online):
             center.findStore()?.sync()
         case .component:
-            center.findStore()?.awake()
+            guard let store = center.findStore() else { return }
+            store.awake()
+            store.restore()
         default:
             break
         }

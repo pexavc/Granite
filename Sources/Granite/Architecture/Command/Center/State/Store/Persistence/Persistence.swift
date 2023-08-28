@@ -17,6 +17,7 @@ public protocol AnyPersistence : AnyObject {
     var key : String { get }
     
     var isRestoring : Bool { get set }
+    var hasRestored : Bool { get set }
     
     init(key : String)
     
@@ -45,6 +46,7 @@ extension AnyPersistence {
 public class EmptyPersistence : AnyPersistence {
     public let readWriteQueue: OperationQueue? = .init()
     public var isRestoring: Bool = false
+    public var hasRestored: Bool = false
     
     public init() {}
     public required init(key: String) {}

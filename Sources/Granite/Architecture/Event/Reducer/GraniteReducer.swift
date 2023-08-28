@@ -228,6 +228,7 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         expedition.valueSignal
     }
     
+    private var payloadFindAttempted: Bool = false
     public var payload : AnyGranitePayload?
     public var events : [AnyEvent] {
         expedition.findEvents()
@@ -251,17 +252,17 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     
     required public init() {
         self.interaction = .basic
-        self.payload = expedition.findPayload()
+        //self.payload = expedition.findPayload()
     }
     
     required public init(debounce interval: Double) {
         self.interaction = .debounce(interval)
-        self.payload = expedition.findPayload()
+        //self.payload = expedition.findPayload()
     }
     
     required public init(throttle interval: Double) {
         self.interaction = .throttle(interval)
-        self.payload = expedition.findPayload()
+        //self.payload = expedition.findPayload()
     }
     
     deinit {
@@ -278,7 +279,9 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     public func execute(_ state: AnyGraniteState?) -> AnyGraniteState {
         var mutableState = (state as? Expedition.Center.GenericGraniteState) ?? Expedition.Center.GenericGraniteState()
         
-        if let payload = payload as? Expedition.Metadata {
+        find()
+        
+        if let payload = self.payload as? Expedition.Metadata {
             expedition.reduce(state: &mutableState, payload: payload)
         } else {
             expedition.reduce(state: &mutableState)
@@ -289,6 +292,8 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
     
     public func executeAsync(_ state: AnyGraniteState?) async -> AnyGraniteState {
         var mutableState = (state as? Expedition.Center.GenericGraniteState) ?? Expedition.Center.GenericGraniteState()
+        
+        find()
         
         if let payload = payload as? Expedition.Metadata {
             await expedition.reduce(state: &mutableState, payload: payload)
@@ -303,7 +308,16 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
         self.isOnline = isOnline
     }
     
+    private func find() {
+        guard payloadFindAttempted == false else { return }
+        if self.payload == nil {
+            self.payload = expedition.findPayload()
+            self.payloadFindAttempted = true
+        }
+    }
+    
     public func update(_ payload: GranitePayload?) {
+        find()
         //TODO: make sure it is okay that a nil check is not required
         //Otherwise in notify requests and repetitive subsequent ones
         //the last payload persists

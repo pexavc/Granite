@@ -45,14 +45,19 @@ final public class FilePersistence : AnyPersistence {
     
     public var isRestoring: Bool = false
     
+    public var hasRestored: Bool = false
+    
     public required init(key: String) {
+        let value = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let rootPath = value.appendingPathComponent("granite-file-persistance")
+        
         self.key = key
-        self.url = FilePersistence.Root.appendingPathComponent(key)
+        self.url = rootPath.appendingPathComponent(key)
         
         FilePersistenceJobs.shared.create(key)
         
         do {
-            try FileManager.default.createDirectory(at: FilePersistence.Root,
+            try FileManager.default.createDirectory(at: rootPath,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
         }
@@ -88,6 +93,7 @@ final public class FilePersistence : AnyPersistence {
         }
         
         do {
+            hasRestored = true
             return try decoder.decode(State.self, from: data)
         }
         catch let error {
@@ -99,14 +105,4 @@ final public class FilePersistence : AnyPersistence {
     public func purge() {
         try? FileManager.default.removeItem(at: url)
     }
- 
-}
-
-extension FilePersistence {
-    
-    fileprivate static let Root : URL = {
-        let value = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return value.appendingPathComponent("granite-file-persistance")
-    }()
-    
 }

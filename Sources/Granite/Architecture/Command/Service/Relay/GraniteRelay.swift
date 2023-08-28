@@ -66,6 +66,10 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         cancellableBag.removeAll()
     }
     
+    public func sharableLoaded() {
+        service.center.findStore()?.restore()
+    }
+    
     public func update(behavior: GraniteRelayBehavior) {
         self.behavior = behavior
     }

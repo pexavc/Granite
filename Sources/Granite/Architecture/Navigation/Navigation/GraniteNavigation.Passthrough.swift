@@ -184,8 +184,10 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
                 } else {
                     if destinationStyleFinal.isCustomTrailing {
                         ZStack(alignment: .top) {
-                            navBar
-                                .background(destinationStyleFinal.navBarBGColor)
+                            if destinationStyleFinal.hideLeadingView == false {
+                                navBar
+                                    .background(destinationStyleFinal.navBarBGColor)
+                            }
                             view
                         }
                     } else {

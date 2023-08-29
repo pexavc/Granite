@@ -125,11 +125,13 @@ public struct GraniteNavigationDestinationStyle {
     var animation: TransitionAnimation
     var isWindow: Bool
     var titleBarHeight: CGFloat = NSWindow.defaultTitleBarHeight
+    var hideLeadingView: Bool
     
     public init<Content: View>(fullWidth: Bool = false,
                                navBarBGColor: Color = .clear,
                                isCustomTrailing: Bool = false,
                                animation: TransitionAnimation = .slide,
+                               hideLeadingView: Bool = false,
                                @ViewBuilder _ content: @escaping () -> Content = { EmptyView() }) {
         self.fullWidth = fullWidth
         self.navBarBGColor = navBarBGColor
@@ -137,6 +139,7 @@ public struct GraniteNavigationDestinationStyle {
         self.animation = animation
         self.trailingItem = { AnyView(content()) }
         self.isWindow = false
+        self.hideLeadingView = false
     }
     
     public init(isWindow: Bool) {
@@ -146,6 +149,7 @@ public struct GraniteNavigationDestinationStyle {
         self.animation = .slide
         self.trailingItem = { AnyView(EmptyView()) }
         self.isWindow = isWindow
+        self.hideLeadingView = false
     }
     
     public enum TransitionAnimation {
@@ -160,8 +164,13 @@ public struct GraniteNavigationDestinationStyle {
         .init(navBarBGColor: navBarBGColor)
     }
     
-    public static func customTrailing(_ navBarBGColor: Color = .clear) -> GraniteNavigationDestinationStyle {
-        .init(navBarBGColor: navBarBGColor, isCustomTrailing: true)
+    public static func customTrailing(_ navBarBGColor: Color = .clear,
+                                      fullWidth: Bool = false,
+                                      hideLeadingView: Bool = false) -> GraniteNavigationDestinationStyle {
+        .init(fullWidth: fullWidth,
+              navBarBGColor: navBarBGColor,
+              isCustomTrailing: true,
+              hideLeadingView: hideLeadingView)
     }
 }
 

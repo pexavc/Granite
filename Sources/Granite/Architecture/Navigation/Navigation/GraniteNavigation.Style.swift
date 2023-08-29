@@ -35,9 +35,9 @@ public struct GraniteNavigationStyle {
     let title: String
     let leadingButtonImageName: String
     let leadingButtonKind: LeadingButtonKind
-    let backgroundColor: Color
-    let barStyle: BarStyle
-    let leadingItem: AnyView
+    public let backgroundColor: Color
+    public let barStyle: BarStyle
+    public let leadingItem: AnyView
     
     public init(title: String = "",
                 leadingButtonKind: LeadingButtonKind = .back,
@@ -104,11 +104,11 @@ public struct GraniteNavigationStyle {
 }
 
 private struct GraniteNavigationStyleKey: EnvironmentKey {
-    static let defaultValue: GraniteNavigationStyle = .init() { }
+    public static let defaultValue: GraniteNavigationStyle = .init() { }
 }
 
 extension EnvironmentValues {
-    var graniteNavigationStyle: GraniteNavigationStyle {
+    public var graniteNavigationStyle: GraniteNavigationStyle {
         get { self[GraniteNavigationStyleKey.self] }
         set { self[GraniteNavigationStyleKey.self] = newValue }
     }
@@ -171,6 +171,13 @@ public struct GraniteNavigationDestinationStyle {
               navBarBGColor: navBarBGColor,
               isCustomTrailing: true,
               hideLeadingView: hideLeadingView)
+    }
+    
+    public static func custom(_ navBarBGColor: Color = .clear) -> GraniteNavigationDestinationStyle {
+        .init(fullWidth: true,
+              navBarBGColor: navBarBGColor,
+              isCustomTrailing: true,
+              hideLeadingView: true)
     }
 }
 

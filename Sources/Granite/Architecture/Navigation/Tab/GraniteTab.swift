@@ -59,6 +59,8 @@ public struct GraniteTab : Identifiable, Equatable {
         lhs.id == rhs.id
     }
     
+    
+    public let ignoreEdges: Edge.Set
     public let component : AnyView
     public let content : AnyView
     public let split: Bool
@@ -68,6 +70,7 @@ public struct GraniteTab : Identifiable, Equatable {
     public let action: (() -> Void)?
     
     public init<Content: View, Component: GraniteComponent>(action: (() -> Void)? = nil,
+                                                            ignoreEdges: Edge.Set = [],
                                                             split: Bool = false,
                                                             last: Bool = false,
                                                             @ViewBuilder component: @escaping (() -> Component),
@@ -76,6 +79,7 @@ public struct GraniteTab : Identifiable, Equatable {
         let iconBuild = icon()
         self.id = String(describing: componentBuild)
         self.action = action
+        self.ignoreEdges = ignoreEdges
         self.split = split
         self.last = last
         self.component = AnyView(componentBuild)
@@ -268,6 +272,7 @@ public struct GraniteTabView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
                         .environment(\.graniteTabSelected, currentTab == indexOf(tab))
+                        .edgesIgnoringSafeArea(tab.ignoreEdges)
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -282,6 +287,7 @@ public struct GraniteTabView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .opacity(indexOf(tab) == currentTab ? 1.0 : 0.0)
                         .environment(\.graniteTabSelected, currentTab == indexOf(tab))
+                        .edgesIgnoringSafeArea(tab.ignoreEdges)
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             

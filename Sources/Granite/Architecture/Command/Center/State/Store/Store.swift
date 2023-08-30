@@ -121,12 +121,8 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         persistence files make sure it is operating from its
         last state
         */
-//        guard autoSave else { return }
-//
-//        //container.restore()
-//
-//        if preload {
-//            //self.preload()
-//        }
+        guard autoSave else { return }
+
+        container.restore(wait: preload)
     }
 }

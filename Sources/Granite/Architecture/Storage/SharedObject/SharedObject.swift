@@ -50,25 +50,22 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
         container = .init(wrappedValue: wrappedValue, id: id)
 	}
 	
-	public init(_ id: ID) {
-        container = .init(wrappedValue: nil, id: id)
-	}
-	
 	public init(_ id: ID) where ObjectType: SharableObject {
-        container = .init(wrappedValue: ObjectType.initialValue,
-                       id: id)
-        self.container.object.sharableLoaded()
+        if let object = SharedRepository.getObject(for: id.hashValue) as? ObjectType {
+            container = .init(wrappedValue: object, id: id)
+        } else {
+            container = .init(wrappedValue: SharedRepository.insert(ObjectType.initialValue, for: id.hashValue), id: id)
+        }
 	}
 	
 	private final class Object<ObjectType: ObservableObject>: ObservableObject {
 		
 		private var cancellable: AnyCancellable?
 		
-		var object: ObjectType { didSet { subscribe() } }
+		var object: ObjectType
 		
-		init(wrappedValue: ObjectType?, id: ID) {
-			object = SharedRepository.getObject(for: id.hashValue,
-                                                defaultValue: wrappedValue)
+		init(wrappedValue: ObjectType, id: ID) {
+            self.object = wrappedValue
 			subscribe()
 		}
 		
@@ -98,4 +95,19 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 			}
 		}
 	}
+    
+}
+final class SharedRepository {
+    
+    private static var objects: [Int: Any] = [:]
+    
+    static func getObject(for key: Int) -> Any? {
+        
+        return objects[key]
+    }
+    
+    static func insert<ObjectType>(_ object: ObjectType, for key: Int) -> ObjectType {
+        objects[key] = object
+        return object
+    }
 }

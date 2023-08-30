@@ -97,7 +97,6 @@ public class GraniteStore<State : GraniteState>: ObservableObject, Nameable {
             if let signal = self?.syncSignal,
                shouldSync {
                 
-                //TODO: this detachment needs too be revisited
                 self?.syncTask = Task(priority: .userInitiated) {
                     signal.send((state, id))
                 }

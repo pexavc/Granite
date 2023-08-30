@@ -55,7 +55,6 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
     public init(_ behavior: GraniteRelayBehavior = .normal,
                 isDiscoverable: Bool = true, label: String = "") {
         self.isDiscoverable = isDiscoverable
-        //relay.update(behavior: behavior)
 //        self._relay = .init(wrappedValue: .init(isDiscoverable: isDiscoverable))
         
         switch behavior {

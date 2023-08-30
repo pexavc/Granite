@@ -21,7 +21,7 @@ public final class GraniteNavigation: ObservableObject {
         }
         
         public var navigation: GraniteNavigation {
-            GraniteNavigation.router(for: id)
+            GraniteNavigation.instance(for: id)
         }
         
         public func push<C: View>(style: GraniteNavigationDestinationStyle = .init(),
@@ -55,9 +55,13 @@ public final class GraniteNavigation: ObservableObject {
     
     var id: String
     
-    public static func router(for key: String) -> GraniteNavigation {
+    public static func instance(for key: String) -> GraniteNavigation {
         //TODO: Wont work on tablet
         .main.child(key) ?? .main
+    }
+    
+    public static func router(for key: String) -> Router {
+        instance(for: key).asRouter
     }
     
     static var mainSet: Bool = false

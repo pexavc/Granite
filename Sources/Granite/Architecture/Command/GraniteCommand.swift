@@ -117,11 +117,8 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     
     func setup() {
         switch kind {
-        case .service(.online):
-            center.findStore()?.sync()
         case .component:
             guard let store = center.findStore() else { return }
-            store.awake()
             store.restore()
         default:
             break
@@ -151,7 +148,6 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         compile()
         
         store.willChange.bind("stateWillChange")
-        store.syncSignal.bind("syncStateSignal")
     }
     
     func listen(_ listeners: () -> Void) {
@@ -167,10 +163,6 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
     func observe() {
         guard let store = center.findStore() else { return }
         
-        guard let changeSignal = (store.willChange as? GraniteSignal.Payload<Center.GenericGraniteState>) else {
-            return
-        }
-        
         /*
          We want to update the UI with state changes
          Services have relays to handle updates onto the UI
@@ -181,11 +173,20 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         
         guard case .component = kind else { return }
         
-        changeSignal += { [weak self] _ in
+        store
+            .container
+            .objectWillChange
+            .throttle(for: .seconds(0.0167), scheduler: RunLoop.main, latest: true)
+            .sink { [unowned self] _ in
             DispatchQueue.main.async { [weak self] in
                 self?.objectWillChange.send()
             }
-        }
+        }.store(in: &cancellables)
+//        changeSignal += { [weak self] _ in
+//            DispatchQueue.main.async { [weak self] in
+//                self?.objectWillChange.send()
+//            }
+//        }
         
         //Observed here, signal sent by Component+View
         didAppear = { [weak self] in

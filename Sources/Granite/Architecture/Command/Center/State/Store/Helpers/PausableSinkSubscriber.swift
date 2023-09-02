@@ -37,13 +37,14 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     var subscription: Subscription?
     
     enum State {
+        case idle
         case stopped
         case paused
         case normal
     }
     
     //TODO: atomic
-    var state: State = .stopped {
+    var state: State = .idle {
         didSet {
             if oldValue == .paused && state == .normal {
                 sendBuffer()

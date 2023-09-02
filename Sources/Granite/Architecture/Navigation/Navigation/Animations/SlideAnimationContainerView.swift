@@ -70,7 +70,7 @@ struct SlideAnimationContainerView<MenuContent: View>: View {
                     
                     //!isShowing = width
                     
-                    let translation = (value.translation.width - (startWidth * (isShowing ? -1 : 1))) + (isShowing ? 0 : width)
+                    let translation = (value.translation.width - (startWidth * (isShowing ? 1 : -1))) + (isShowing ? 0 : width)
                     self.offsetX = max(0, min(translation, width))
                 }
             }

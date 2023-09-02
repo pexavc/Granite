@@ -35,6 +35,7 @@ public struct StatePersistence<State : Codable> {
     public func restore(wait: Bool = false) {
         guard storage.hasRestored == false else { return }
         GraniteLog("restoring store: \(storage.key)", level: .debug)
+        
         storage.readWriteQueue?.addBarrierBlock {
             if let state : State = storage.restore() {
                 setState(state)

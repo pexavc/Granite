@@ -5,6 +5,7 @@
 //  Created by Lorenzo Fiamingo on 31/07/2020.
 //
 
+import Foundation
 import SwiftUI
 import Combine
 
@@ -46,11 +47,11 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 		.init(container.object)
 	}
 	
-	public init(wrappedValue: ObjectType, _ id: ID) {
-        container = .init(wrappedValue: wrappedValue, id: id)
-	}
-	
-	public init(_ id: ID) where ObjectType: SharableObject {
+//	init(wrappedValue: ObjectType, _ id: ID) {
+//        container = .init(wrappedValue: wrappedValue, id: id)
+//	}
+    
+	init(_ id: ID) where ObjectType: SharableObject {
         if let object = SharedRepository.getObject(for: id.hashValue) as? ObjectType {
             container = .init(wrappedValue: object, id: id)
         } else {
@@ -60,23 +61,34 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 	
 	private final class Object<ObjectType: ObservableObject>: ObservableObject {
 		
-		private var cancellable: AnyCancellable?
-		
+		private var cancellables = Set<AnyCancellable>()
+//        private var cancellable: AnyCancellable? = nil
+        
 		var object: ObjectType
+        
+        //internal var pausable: PausableSinkSubscriber<ObjectWillChangePublisher.Output, Never>? = nil
 		
-		init(wrappedValue: ObjectType, id: ID) {
+		init(wrappedValue: ObjectType, id: ID) where ObjectType: SharableObject {
             self.object = wrappedValue
-            self.subscribe()
-		}
-		
-		private func subscribe() {
-            cancellable = object
+            //self.subscribe()
+            wrappedValue.pausable = wrappedValue
                 .objectWillChange
                 .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
-                .sink { [unowned self] _ in
-				self.objectWillChange.send()
-			}
+                .pausableSink { [unowned self] _ in
+                self.objectWillChange.send()
+            }
+            wrappedValue.pausable?.store(in: &cancellables)
+            wrappedValue.pausable?.state = .normal
 		}
+		
+//		private func subscribe() {
+//            cancellable = object
+//                .objectWillChange
+//                .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+//                .sink { [unowned self] _ in
+//				self.objectWillChange.send()
+//            }
+//		}
 	}
 	
 	@dynamicMemberLookup

@@ -59,14 +59,6 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.didLoad
     }
     
-    func silence(viewUpdatesOnly updateView: Bool = false) {
-        container.silence(viewUpdatesOnly: updateView)
-    }
-    
-    func awake(viewUpdatesOnly updateView: Bool = false) {
-        container.awake(viewUpdatesOnly: updateView)
-    }
-    
     func restore(wait forCompletion: Bool = false) {
         container.restore(wait: shouldPreload || forCompletion)
     }
@@ -79,36 +71,8 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         container.persistence.save(state)
     }
     
-    func sync(shutdown: Bool = false) {
-        container.sync(shutdown: shutdown)
-    }
-    
-    func prepareSync() {
-        container.prepareSync()
-    }
-    
-    var syncSignal: GraniteSignal.Payload<(State, UUID)> {
-        container.syncSignal
-    }
-    
-    var syncEnabled: Bool {
-        container.syncEnabled
-    }
-    
-    var isSyncing: Bool {
-        container.isSyncing
-    }
-    
-    var viewUpdatesSilenced: Bool {
-        container.silenceViewUpdates
-    }
-    
     private var shouldPreload: Bool
-    /*
-     TODO:
-     - Add debounce function
-     - Add manual save function
-     */
+    
     public init(storage : AnyPersistence = EmptyPersistence(), autoSave: Bool = false) {
         container = .init(storage: storage, autoSave: autoSave)
         self.shouldPreload = false

@@ -37,19 +37,11 @@ extension GraniteService {
     public func preload() {
         locate?.command.center.findStore()?.preload()
     }
-    
-    public func silence(viewUpdatesOnly updateView: Bool = false) {
-        locate?.command.center.findStore()?.silence(viewUpdatesOnly: updateView)
-    }
-    
-    public func awake(viewUpdatesOnly updateView: Bool = false) {
-        locate?.command.center.findStore()?.awake(viewUpdatesOnly: updateView)
-    }
 }
 
 extension GraniteService {
     public var locate: Service<Self.GenericGraniteCenter>? {
-
+        
         let mirror = Mirror(reflecting: self)
         let children = mirror.children
 

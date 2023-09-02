@@ -38,7 +38,10 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     
     var lifecycle: GraniteLifecycle = .none
     
-    fileprivate var isSilenced: Bool = false
+    internal var isSilenced: Bool = false
+    //View updates via sharableObject
+    internal var pausable: PausableSinkSubscriber<ObjectWillChangePublisher.Output, Never>? = nil
+    
     fileprivate var behavior: GraniteRelayBehavior = .normal
     fileprivate var pendingUpdates: Bool = false
     
@@ -64,6 +67,8 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         removeObservers(includeChildren: true)
         cancellableBag.forEach { $0.cancel() }
         cancellableBag.removeAll()
+        pausable?.cancel()
+        pausable = nil
     }
     
     public func sharableLoaded() {
@@ -93,69 +98,14 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     var cancellableBag = Set<AnyCancellable>()
     func observe() {
         guard let store = service.center.findStore() else { return }
-        guard let changeSignal = (store.willChange as? GraniteSignal.Payload<Service.GenericGraniteCenter.GenericGraniteState>) else {
-            return
-        }
         
         store
             .container
-            .$state
-            .removeDuplicates()
+            .objectWillChange
+            .throttle(for: .seconds(0.0167), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
-                
-            DispatchQueue.main.async {
-
-                if self?.isSilenced == false {
-                    self?.objectWillChange.send()
-                } else {
-                    self?.pendingUpdates = true
-                }
-            }
+            self?.objectWillChange.send()
         }.store(in: &cancellableBag)
-        
-//        changeSignal += { [weak self] state in
-//            DispatchQueue.main.async {
-//
-//                if self?.isSilenced == false {
-//                    self?.objectWillChange.send()
-//                } else {
-//                    self?.pendingUpdates = true
-//                }
-//            }
-//        }
-        
-        /*
-         Moving the syncSignal here from State seems
-         to resolve the memory issues vs having it in GraniteState
-         releases are done when relays remove observers
-         
-         Commands would have called sync too since they share state
-         types, which would have been unnecessary
-         
-         TODO: a slight retainment (~1mb can be observed, but the source may not be here
-         */
-        
-//        if store.syncEnabled {
-//            store.syncSignal += { [weak self] (state, id) in
-//                guard store.id != id else {
-//                    return
-//                }
-//
-////                store.silence()
-//                store.prepareSync()
-//                self?.update(state)
-//                if store.viewUpdatesSilenced == false {
-//                    DispatchQueue.main.async { [weak self] in
-//                        if self?.isSilenced == false {
-//                            self?.objectWillChange.send()
-//                        } else {
-//                            self?.pendingUpdates = true
-//                        }
-//                    }
-//                }
-//                //store.awake()
-//            }
-//        }
         
         guard isDiscoverable else { return }
         
@@ -164,18 +114,12 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     
     public func awake() {
         isSilenced = false
-        
-        if pendingUpdates {
-            pendingUpdates = false
-            
-            DispatchQueue.main.async { [weak self] in
-                self?.objectWillChange.send()
-            }
-        }
+        pausable?.state = .normal
     }
     
     public func silence() {
         isSilenced = true
+        pausable?.state = .paused
     }
     
     public func persistStateChanges() {

@@ -61,7 +61,7 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
         case .silence:
             relay.silence()
         default:
-            break
+            relay.awake()
         }
     }
     
@@ -77,6 +77,5 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
 public enum GraniteRelayBehavior {
     case normal
     case silence
-    case silenceViewUpdates
     case detach
 }

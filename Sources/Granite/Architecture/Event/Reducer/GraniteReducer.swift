@@ -344,7 +344,7 @@ open class GraniteReducerExecutable<Expedition: GraniteReducer>: EventExecutable
             expedition.beam.removeObservers()
             beamCancellables.insert(expedition.beam += handler)
         case .broadcast(let id):
-            bubbledCancellables[id]?.cancel()
+            broadcastCancellables[id]?.cancel()
             broadcastCancellables[id] = (expedition.broadcast += handler)
         case .bubble(let id):
             bubbledCancellables[id]?.cancel()

@@ -102,8 +102,14 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
             .$state
             .removeDuplicates()
             .sink { [weak self] _ in
+                
             DispatchQueue.main.async {
-                self?.objectWillChange.send()
+
+                if self?.isSilenced == false {
+                    self?.objectWillChange.send()
+                } else {
+                    self?.pendingUpdates = true
+                }
             }
         }.store(in: &cancellableBag)
         

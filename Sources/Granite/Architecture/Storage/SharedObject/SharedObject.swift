@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 class SharedObjectJobs {
-    static var shared: FilePersistenceJobs = .init()
+    static var shared: SharedObjectJobs = .init()
     
     var map: [Int : OperationQueue] = [:]
     var threads: [Int : DispatchQueue] = [:]
@@ -66,7 +66,7 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 		
 		init(wrappedValue: ObjectType, id: ID) {
             self.object = wrappedValue
-			subscribe()
+            self.subscribe()
 		}
 		
 		private func subscribe() {
@@ -102,7 +102,6 @@ final class SharedRepository {
     private static var objects: [Int: Any] = [:]
     
     static func getObject(for key: Int) -> Any? {
-        
         return objects[key]
     }
     

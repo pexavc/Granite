@@ -206,12 +206,12 @@ public struct NavigationPassthroughComponent<Component: GraniteComponent, Payloa
             if loaded == false {
                 VStack {
                     Spacer()
-#if os(iOS)
+                    #if os(iOS)
                     ProgressView()
-#else
+                    #else
                     ProgressView()
                         .scaleEffect(0.6)
-#endif
+                    #endif
                     Spacer()
                 }
             }

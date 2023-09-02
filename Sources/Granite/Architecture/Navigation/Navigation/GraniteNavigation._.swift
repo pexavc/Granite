@@ -25,12 +25,17 @@ public final class GraniteNavigation: ObservableObject {
         }
         
         public func push<C: View>(style: GraniteNavigationDestinationStyle = .init(),
+                                  window: GraniteRouteWindowProperties? = nil,
                                   @ViewBuilder _ content: @escaping () -> C) {
-            self.navigation.push(destinationStyle: style, content)
+            self.navigation.push(destinationStyle: style,
+                                 window: window,
+                                 content)
         }
         
-        public func push<C: GraniteNavigationDestination>(@ViewBuilder _ content: @escaping () -> C) {
-            self.navigation.push(content)
+        public func push<C: GraniteNavigationDestination>(window: GraniteRouteWindowProperties? = nil,
+                                                          @ViewBuilder _ content: @escaping () -> C) {
+            self.navigation.push(window: window,
+                                 content)
         }
         
         public func pop() {

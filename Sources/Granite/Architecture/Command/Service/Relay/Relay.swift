@@ -59,18 +59,18 @@ public struct Relay<Service: GraniteService> : DynamicProperty {
         
         switch behavior {
         case .silence:
-            relay.silence()
+            silence()
         default:
-            relay.awake()
+            awake()
         }
     }
     
     public func awake() {
-        relay.awake()
+        _relay.awake()
     }
     
     public func silence() {
-        relay.silence()
+        _relay.silence()
     }
 }
 

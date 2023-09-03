@@ -51,6 +51,14 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 //        container = .init(wrappedValue: wrappedValue, id: id)
 //	}
     
+    public func silence() {
+        container.pausable?.state = .stopped
+    }
+    
+    public func awake() {
+        container.pausable?.state = .normal
+    }
+    
 	init(_ id: ID) where ObjectType: SharableObject {
         if let object = SharedRepository.getObject(for: id.hashValue) as? ObjectType {
             container = .init(wrappedValue: object, id: id)
@@ -62,33 +70,38 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 	private final class Object<ObjectType: ObservableObject>: ObservableObject {
 		
 		private var cancellables = Set<AnyCancellable>()
-//        private var cancellable: AnyCancellable? = nil
         
 		var object: ObjectType
         
-        //internal var pausable: PausableSinkSubscriber<ObjectWillChangePublisher.Output, Never>? = nil
+        /*
+         This container is created wherever a @Relay is called.
+         But, there's always only 1 relay instance.
+         
+         We simply subscribe to each, propogate view updates.
+         While maintaining data consistency in 1 singular location.
+         */
+        
+        var pausable: PausableSinkSubscriber<ObjectType.ObjectWillChangePublisher.Output, Never>? = nil
 		
+        deinit {
+            pausable?.cancel()
+            cancellables.forEach { $0.cancel() }
+            pausable = nil
+            cancellables.removeAll()
+        }
+        
 		init(wrappedValue: ObjectType, id: ID) where ObjectType: SharableObject {
             self.object = wrappedValue
-            //self.subscribe()
-            wrappedValue.pausable = wrappedValue
+            
+            pausable = wrappedValue
                 .objectWillChange
                 .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
                 .pausableSink { [unowned self] _ in
                 self.objectWillChange.send()
             }
-            wrappedValue.pausable?.store(in: &cancellables)
-            wrappedValue.pausable?.state = .normal
+            pausable?.store(in: &cancellables)
+            pausable?.state = .normal
 		}
-		
-//		private func subscribe() {
-//            cancellable = object
-//                .objectWillChange
-//                .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
-//                .sink { [unowned self] _ in
-//				self.objectWillChange.send()
-//            }
-//		}
 	}
 	
 	@dynamicMemberLookup

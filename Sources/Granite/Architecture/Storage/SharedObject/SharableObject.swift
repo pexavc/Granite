@@ -13,8 +13,6 @@ protocol SharableObject: ObservableObject {
 	
 	static var initialValue: Self { get }
     
-    var pausable: PausableSinkSubscriber<ObjectWillChangePublisher.Output, Never>? { get set }
-    
     //Relays should commit restores here
     func sharableLoaded()
 }

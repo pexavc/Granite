@@ -39,11 +39,8 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     var lifecycle: GraniteLifecycle = .none
     
     internal var isSilenced: Bool = false
-    //View updates via sharableObject
-    internal var pausable: PausableSinkSubscriber<ObjectWillChangePublisher.Output, Never>? = nil
     
     fileprivate var behavior: GraniteRelayBehavior = .normal
-    fileprivate var pendingUpdates: Bool = false
     
     internal var reducers: [AnyReducerContainer] = []
     internal var cancellables = Set<AnyCancellable>()
@@ -55,7 +52,9 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         self.kind = .offline
         self.isDiscoverable = isDiscoverable
         
-        Prospector.shared.currentNode?.addChild(id: self.id, label: String(reflecting: Service.self), type: .relay)
+        Prospector.shared.currentNode?.addChild(id: self.id,
+                                                label: String(reflecting: Service.self),
+                                                type: .relay)
         Prospector.shared.push(id: self.id, .relay)
         service = Service()
         setup()
@@ -67,8 +66,6 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
         removeObservers(includeChildren: true)
         cancellableBag.forEach { $0.cancel() }
         cancellableBag.removeAll()
-        pausable?.cancel()
-        pausable = nil
     }
     
     public func sharableLoaded() {
@@ -114,12 +111,10 @@ final public class GraniteRelay<Service: GraniteService>: Inspectable, Prospecta
     
     public func awake() {
         isSilenced = false
-        pausable?.state = .normal
     }
     
     public func silence() {
         isSilenced = true
-        pausable?.state = .paused
     }
     
     public func persistStateChanges() {

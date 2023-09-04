@@ -204,7 +204,7 @@ public struct GraniteLogger {
     }
 }
 
-protocol Nameable {
+public protocol Nameable {
 }
 extension Nameable {
     var NAME: String {

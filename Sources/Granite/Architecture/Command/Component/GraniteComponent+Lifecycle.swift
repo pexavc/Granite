@@ -37,7 +37,7 @@ extension GraniteComponent {
     func lifecycle<Body : View>(_ view : Body) -> some View {
         let relays = self.findRelays()
             
-        guard let command = locate else {
+        guard let locate else {
             return view
             .onAppear {
                 for relay in relays {
@@ -51,10 +51,6 @@ extension GraniteComponent {
             }
         }
         
-        locate?.command.listen {
-            listeners
-        }
-        
         if #available(macOS 12.4, iOS 15, *) {
             
             return view
@@ -63,17 +59,23 @@ extension GraniteComponent {
                         relay.awake()
                     }
                     
-                    await command.runTasks?()
+                    await locate.runTasks?()
                 }
                 .onAppear {
-                    command.didAppear?()
+                    locate.didAppear?()
+                    
+                    locate.command.listen(self.id) {
+                        listeners
+                    }
                 }
                 .onDisappear {
-                    command.didDisappear?()
+                    locate.didDisappear?()
                     
                     for relay in relays {
                         relay.silence()
                     }
+                    
+                    locate.command.removeListeners(self.id)
                 }
         } else {
             
@@ -83,14 +85,20 @@ extension GraniteComponent {
                         relay.awake()
                     }
                     
-                    command.didAppear?()
+                    locate.didAppear?()
+                    
+                    locate.command.listen(self.id) {
+                        listeners
+                    }
                 }
                 .onDisappear {
-                    command.didDisappear?()
+                    locate.didDisappear?()
                     
                     for relay in relays {
                         relay.silence()
                     }
+                    
+                    locate.command.removeListeners(self.id)
                 }
         }
     }

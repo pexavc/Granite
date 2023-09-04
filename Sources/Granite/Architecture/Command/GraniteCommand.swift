@@ -150,14 +150,20 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         store.willChange.bind("stateWillChange")
     }
     
-    func listen(_ listeners: () -> Void) {
-        //only once
-        guard !listenersSet else { return }
+    func listen(_ id: UUID? = nil, _ listeners: () -> Void) {
+        //guard !listenersSet else { return }
         listenersSet = true
-        Prospector.shared.push(id: self.id, .command)
+        
+        Prospector.shared.node(for: self.id)?.addChild(id: id ?? self.id, label: "listeners", type: .listeners)
+        Prospector.shared.push(id: id ?? self.id, .listeners)
         listeners()
-        Prospector.shared.pop(.command)
+        Prospector.shared.pop(.listeners)
         GraniteLog("applying listeners to: \(NAME)", level: .debug)
+    }
+    
+    func removeListeners(_ id: UUID? = nil) {
+        let id = id ?? self.id
+        Prospector.shared.node(for: id)?.remove(includeChildren: true)
     }
     
     func observe() {
@@ -182,11 +188,6 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
                 self?.objectWillChange.send()
             }
         }.store(in: &cancellables)
-//        changeSignal += { [weak self] _ in
-//            DispatchQueue.main.async { [weak self] in
-//                self?.objectWillChange.send()
-//            }
-//        }
         
         //Observed here, signal sent by Component+View
         didAppear = { [weak self] in

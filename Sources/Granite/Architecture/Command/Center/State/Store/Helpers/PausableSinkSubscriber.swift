@@ -33,8 +33,28 @@ extension Publisher {
     }
 }
 
-class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
-    var subscription: Subscription?
+class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, AnyProspectNode {
+    var id: UUID = .init()
+    
+    fileprivate class Storage {
+        
+        var cancellable = AnyCancellable({})
+        
+        var subscription : Subscription? = nil {
+            
+            didSet {
+                cancellable = AnyCancellable { [weak self] in
+                    self?.subscription?.cancel()
+                    self?.subscription = nil
+                }
+            }
+            
+        }
+    }
+    
+    var cancellable: AnyCancellable {
+        storage.cancellable
+    }
     
     enum State {
         case idle
@@ -58,6 +78,8 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     var receiveValue: (Input) -> Void
     var receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)?
     
+    fileprivate let storage = Storage()
+    
     init(
         receiveValue: @escaping (Input) -> Void,
         receiveCompletion: @escaping (Subscribers.Completion<Failure>) -> Void
@@ -78,7 +100,7 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
     }
     
     func receive(subscription: Subscription) {
-        self.subscription = subscription
+        storage.subscription = subscription
         subscription.request(.unlimited)
     }
     
@@ -111,12 +133,11 @@ class PausableSinkSubscriber<Input, Failure: Error>: Subscriber, Cancellable {
         case .paused, .stopped:
             return .none
         default:
-            return .none
+            return .unlimited
         }
     }
     
     func cancel() {
-        subscription?.cancel()
-        subscription = nil
+        cancellable.cancel()
     }
 }

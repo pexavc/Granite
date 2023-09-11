@@ -68,8 +68,6 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 	}
 	
 	private final class Object<ObjectType: ObservableObject>: ObservableObject {
-		
-		private var cancellables = Set<AnyCancellable>()
         
 		var object: ObjectType
         
@@ -81,17 +79,25 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
          While maintaining data consistency in 1 singular location.
          */
         
-        var pausable: PausableSinkSubscriber<ObjectType.ObjectWillChangePublisher.Output, Never>? = nil
+        weak var pausable: PausableSinkSubscriber<ObjectType.ObjectWillChangePublisher.Output, Never>? = nil
 		
         deinit {
             pausable?.cancel()
-            cancellables.forEach { $0.cancel() }
             pausable = nil
-            cancellables.removeAll()
+            Prospector.shared.node(for: self.id)?.remove(includeChildren: true)
+            //GraniteLog("Shareable deinit", level: .debug)
         }
+        
+        let id: UUID = .init()
         
 		init(wrappedValue: ObjectType, id: ID) where ObjectType: SharableObject {
             self.object = wrappedValue
+            
+            let currentNodeId = Prospector.shared.currentNode?.id
+            Prospector.shared.currentNode?.addChild(id: self.id,
+                                                    label: String(reflecting: Self.self),
+                                                    type: .relayNetwork)
+            Prospector.shared.push(id: self.id, .relayNetwork)
             
             pausable = wrappedValue
                 .objectWillChange
@@ -99,8 +105,18 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
                 .pausableSink { [unowned self] _ in
                 self.objectWillChange.send()
             }
-            pausable?.store(in: &cancellables)
             pausable?.state = .normal
+            
+            if let currentNodeId,
+               let pausable  {
+                let nodeLabel = Prospector.shared.node(for: currentNodeId)?.label ?? ""
+                //GraniteLog("Shared sub'd under id: \(currentNodeId) | \(nodeLabel)", level: .debug)
+                Prospector.shared.currentNode?.addProspect(pausable, for: self.id)
+            } else if currentNodeId == nil {
+                //GraniteLog("No current node exists: \(String(reflecting: ObjectType.self))", level: .debug)
+            }
+            
+            Prospector.shared.pop(.relayNetwork)
 		}
 	}
 	
@@ -120,7 +136,6 @@ public struct SharedObject<ObjectType, ID>: DynamicProperty where ObjectType: Ob
 			}
 		}
 	}
-    
 }
 final class SharedRepository {
     

@@ -21,6 +21,8 @@ public enum ProspectType: String {
     case state
     case listeners
     case none
+    case navigation
+    case custom
 }
 
 public class Prospect {
@@ -47,7 +49,11 @@ public class Prospect {
         Prospector.shared.nodes.removeObject(forKey: id.uuidString as NSString)
     }
     
-    func addProspect<V>(_ node : Prospect.Node<V>, for signalid : UUID) {
+//    func addProspect<V>(_ node : Prospect.Node<V>, for signalid : UUID) {
+//        self.prospects.insert(node.cancellable)
+//    }
+    
+    func addProspect(_ node : AnyProspectNode, for id : UUID) {
         self.prospects.insert(node.cancellable)
     }
     

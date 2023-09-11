@@ -99,7 +99,6 @@ public class GraniteCommand<Center: GraniteCenter>: Inspectable, Findable, Prosp
         self.buildBehavior = .none
         
         Prospector.shared.currentNode?.addChild(id: self.id, label: String(reflecting: Self.self), type: .command)
-//        Prospector.shared.currentNode?.addProspector(self.prospector)
         Prospector.shared.push(id: self.id, .command)
         center = initialCenter ?? Center()
         setup()

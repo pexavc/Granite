@@ -48,7 +48,6 @@ struct GraniteNavigationView<Content: View>: View {
                        maxHeight: .infinity)
             
             content()
-                .environment(\.graniteRouter, routes.asRouter)
                 .background(style.backgroundColor)
                 .navStack()
                 .onDisappear {

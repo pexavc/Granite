@@ -11,7 +11,6 @@ public protocol AnyGraniteNotification {
     
 }
 
-
 extension AnyGraniteNotification where Self: RawRepresentable, Self.RawValue == String {
     public var asNotification: Notification.Name {
         .init(self.rawValue)

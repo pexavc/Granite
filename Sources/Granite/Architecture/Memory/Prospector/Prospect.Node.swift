@@ -11,6 +11,7 @@ import Combine
 
 protocol AnyProspectNode : Cancellable {
     var id : UUID { get }
+    var cancellable : AnyCancellable { get }
 }
 
 extension Prospect {

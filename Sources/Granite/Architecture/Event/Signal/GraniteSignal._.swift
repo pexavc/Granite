@@ -23,7 +23,7 @@ extension AnyGraniteSignal {
             self.removeObservers()
         }
         
-        Prospector.shared.currentNode?.addChild(id: self.id, label: "\(name ?? "")\(name == nil ? "" : " ")" + String(reflecting: Self.self), type: .signal)
+        //Prospector.shared.currentNode?.addChild(id: self.id, label: "\(name ?? "")\(name == nil ? "" : " ")" + String(reflecting: Self.self), type: .signal)
     }
     
     public func didRemoveObservers() {
@@ -50,6 +50,8 @@ extension Signal {
         
         publisher.subscribe(observer)
         
+        Prospector.shared.currentNode?.addChild(id: self.id,
+                                                label: "signal" + String(reflecting: Self.self), type: .signal)
         Prospector.shared.currentNode?.addProspect(observer, for: id)
         Prospector.shared.node(for: self.id)?.addProspect(observer, for: id)
     

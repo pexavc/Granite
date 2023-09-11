@@ -85,6 +85,8 @@ extension GraniteSignal.Payload {
             handler(value, oldValue)
         }
         
+        Prospector.shared.currentNode?.addChild(id: self.id,
+                                                label: "payload_signal" + String(reflecting: Self.self), type: .signal)
         Prospector.shared.currentNode?.addProspect(observer, for: id)
         Prospector.shared.node(for: self.id)?.addProspect(observer, for: id)
         

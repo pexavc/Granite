@@ -45,10 +45,6 @@ public final class GraniteNavigation: ObservableObject {
     public var asRouter: Router {
         .init(id: self.id)
     }
-    
-    func address(o: UnsafePointer<Void>) -> Int {
-        return unsafeBitCast(o, to: Int.self)
-    }
 
     func addressHeap<T: AnyObject>(o: T) -> Int {
         return unsafeBitCast(o, to: Int.self)
@@ -98,6 +94,7 @@ public final class GraniteNavigation: ObservableObject {
     
     var paths: [String: () -> AnyView] = [:]
     var stack: [String] = []
+    var prospectors: [String: UUID] = [:]
     
     var level: Int {
         stack.count
@@ -127,6 +124,9 @@ public final class GraniteNavigation: ObservableObject {
         let screen = NavigationPassthroughComponent<Component, EmptyGranitePayload>.Screen<Component, EmptyGranitePayload>.init(component)
         let addr = NSString(format: "%p", addressHeap(o: screen)) as String
         
+        let id: UUID = .init()
+        prospectors[addr] = id
+        
         paths[addr] = { AnyView(NavigationPassthroughComponent<Component,
                                 EmptyGranitePayload>(screen: screen)
             .environment(\.graniteNavigationDestinationStyle, destinationStyle)) }
@@ -139,6 +139,17 @@ public final class GraniteNavigation: ObservableObject {
               window: GraniteRouteWindowProperties? = nil) {
         
         GraniteLog("nav stack pushing into: \(self.id)")
+        
+        if let id = prospectors[addr] {
+            Prospector
+                .shared
+                .currentNode?
+                .addChild(id: id,
+                          label: self.id + " | " + "pushed view",
+                          type: .navigation)
+            Prospector.shared.push(id: id, .navigation)
+            GraniteLog("Pushed addr: \(addr) for id: \(id)", level: .debug)
+        }
         
         #if os(macOS)
         if let window {
@@ -169,13 +180,20 @@ public final class GraniteNavigation: ObservableObject {
     }
     
     func pop() {
-        guard let last = stack.last else { return }
-        isActive[last] = false
+        guard let addr = stack.last else { return }
+        isActive[addr] = false
         stack.removeLast()
         
         #if os(iOS)
         self.objectWillChange.send()
         #endif
+        
+        if let id = prospectors[addr] {
+            Prospector.shared.remove(id: id)
+            GraniteLog("Popped addr: \(addr) for id: \(id) | node count: \(Prospector.shared.nodeCount)", level: .debug)
+            
+            
+        }
     }
     
     func releaseStack() {

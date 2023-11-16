@@ -36,7 +36,7 @@ final public class FilePersistence : AnyPersistence {
     }
     
     public static var initialValue: FilePersistence {
-        .init(key: UUID().uuidString)
+        .init(key: UUID().uuidString, kind: .basic)
     }
     
     public let key : String
@@ -47,9 +47,25 @@ final public class FilePersistence : AnyPersistence {
     
     public var hasRestored: Bool = false
     
-    public required init(key: String) {
-        let value = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let rootPath = value.appendingPathComponent("granite-file-persistance")
+    public required init(key: String, kind: PersistenceKind) {
+        let rootPath: URL
+        
+        func getDefaultURL() -> URL {
+            let value = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            return value.appendingPathComponent("granite-file-persistance")
+        }
+        switch kind {
+        case .basic:
+            rootPath = getDefaultURL()
+        case .group(let id):
+            let groupURL = FileManager
+                .default
+                .containerURL(
+                    forSecurityApplicationGroupIdentifier: id)?
+                .appendingPathComponent("granite-file-persistance")
+            
+            rootPath = groupURL ?? getDefaultURL()
+        }
         
         self.key = key
         self.url = rootPath.appendingPathComponent(key)

@@ -19,11 +19,17 @@ public protocol AnyPersistence : AnyObject {
     var isRestoring : Bool { get set }
     var hasRestored : Bool { get set }
     
-    init(key : String)
+    init(key : String, kind: PersistenceKind)
     
     func save<State : Codable>(state : State)
     func restore<State : Codable>() -> State?
     func purge()
+}
+
+public enum PersistenceKind {
+    case basic
+    //App Groups, group ID as string
+    case group(String)
 }
 
 extension AnyPersistence {
@@ -49,5 +55,5 @@ public class EmptyPersistence : AnyPersistence {
     public var hasRestored: Bool = false
     
     public init() {}
-    public required init(key: String) {}
+    public required init(key: String, kind: PersistenceKind) {}
 }

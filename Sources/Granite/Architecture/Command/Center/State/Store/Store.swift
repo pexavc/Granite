@@ -78,8 +78,11 @@ public struct Store<State : GraniteState> : DynamicProperty, AnyGraniteStore {
         self.shouldPreload = false
     }
     
-    public init(persist fileName: String, autoSave: Bool = false, preload: Bool = false) {
-        container = .init(storage: FilePersistence(key: fileName), autoSave: autoSave)
+    public init(persist fileName: String,
+                kind: PersistenceKind = .basic,
+                autoSave: Bool = false,
+                preload: Bool = false) {
+        container = .init(storage: FilePersistence(key: fileName, kind: kind), autoSave: autoSave)
         self.shouldPreload = preload
         /*if a Service is called multiple times its relevant
         persistence files make sure it is operating from its

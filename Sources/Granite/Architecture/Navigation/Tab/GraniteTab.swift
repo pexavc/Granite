@@ -1,8 +1,9 @@
 //
 //  GraniteTab.swift
-//  
+//  Granite
 //
-//  Created by PEXAVC on 1/17/23.
+//  Created by Ritesh Pakala on 1/17/23.
+//  Copyright © 2024 Robin Health Inc. All rights reserved.
 //
 
 import Foundation
@@ -11,8 +12,10 @@ import SwiftUI
 public struct GraniteTabStyle {
     let height: CGFloat
     let background: AnyView
+    let noDivider: Bool
     let paddingTabs: EdgeInsets
     let paddingIcons: EdgeInsets
+    let paddingContainer: EdgeInsets
     let landscape: Bool
     let enableHaptic: Bool
     
@@ -20,14 +23,18 @@ public struct GraniteTabStyle {
                 backgroundColor: Color = .black,
                 paddingTabs: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0),
                 paddingIcons: EdgeInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0),
+                paddingContainer: EdgeInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0),
                 landscape: Bool = false,
                 enableHaptic: Bool = false,
+                noDivider: Bool = false,
                 @ViewBuilder background: (() -> some View) = { EmptyView() }) {
         self.height = height
         self.paddingTabs = paddingTabs
         self.paddingIcons = paddingIcons
+        self.paddingContainer = paddingContainer
         self.landscape = landscape
         self.enableHaptic = enableHaptic
+        self.noDivider = noDivider
         self.background = AnyView(background())
     }
 }
@@ -138,7 +145,7 @@ extension Array: GraniteTabGroup where Element == GraniteTab {
 }
 
 extension View {
-    func graniteTabs(@GraniteTabBuilder tabs : @escaping () -> [GraniteTab]) -> some View {
+    func GraniteTabs(@GraniteTabBuilder tabs : @escaping () -> [GraniteTab]) -> some View {
         self.modifier(GraniteTabViewModifier(tabs: tabs))
     }
 }
@@ -240,6 +247,7 @@ public struct GraniteTabView: View {
                     if tab.split {
                         Spacer()
                     }
+                    
                     Button(action: {
                         currentTab = indexOf(tab)
                         
@@ -263,7 +271,9 @@ public struct GraniteTabView: View {
             .padding(.bottom, style.paddingTabs.bottom)
             .background(style.background)
             
-            Divider()
+            if style.noDivider == false {
+                Divider()
+            }
             
             ZStack {
                 ForEach(tabs) { tab in
@@ -276,6 +286,7 @@ public struct GraniteTabView: View {
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .padding(style.paddingContainer)
     }
     
     public var verticalView: some View {
@@ -291,7 +302,9 @@ public struct GraniteTabView: View {
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            Divider()
+            if style.noDivider == false {
+                Divider()
+            }
             
             VStack {
                 HStack {
@@ -319,7 +332,9 @@ public struct GraniteTabView: View {
             .frame(height: style.height)
             .frame(maxWidth: .infinity)
             .background(style.background)
+            .padding(style.paddingTabs)
         }
+        .padding(style.paddingContainer)
     }
 }
 

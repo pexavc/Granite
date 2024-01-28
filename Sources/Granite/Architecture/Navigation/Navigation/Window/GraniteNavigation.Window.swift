@@ -146,6 +146,16 @@ public class GraniteNavigationWindow {
     public func containsWindow(_ number: Int) -> Bool {
         return windows.values.first(where: { $0.windowNumber == number }) != nil
     }
+    
+    public static func create<Content: View>(isMain: Bool = true,
+                                             props: GraniteRouteWindowProperties = .resizable(900, 600).minSize(900, 600),
+                                             @ViewBuilder content: @escaping (() -> Content)) {
+        GraniteNavigationWindow.shared.addWindow(id: GraniteNavigationWindow.defaultMainWindowId,
+                                                 props: props,
+                                                 isMain: isMain) {
+            content()
+        }
+    }
 }
 
 /// Container to manage the NSWindow and its lifecycle/observers

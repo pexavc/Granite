@@ -3,7 +3,7 @@
 //  Granite
 //
 //  Created by Ritesh Pakala on 1/17/23.
-//  Copyright © 2024 Robin Health Inc. All rights reserved.
+//  Copyright © 2024 Stoic Collective, LLC. All rights reserved.
 //
 
 import Foundation

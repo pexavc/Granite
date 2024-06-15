@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  DebugOverlay.swift
+//
 //
 //  Created by PEXAVC on 9/11/23.
 //
@@ -13,7 +13,7 @@ public struct DebugOverlayView: View {
         VStack {
             HStack {
                 Spacer()
-                
+
                 Button {
                     Prospector.shared.print()
                 } label: {
